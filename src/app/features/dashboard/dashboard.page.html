@@ -1,3 +1,28 @@
-<div class="dashboard-container">
-  <!-- Dashboard content -->
+<div class="min-h-screen bg-gray-950 p-6">
+  <!-- KPI Cards Row -->
+  <app-kpi-cards
+    [totalPortfolios]="totalPortfolios"
+    [totalValue]="totalValue"
+    [avgDailyPnlPct]="avgDailyPnlPct"
+    [totalStocks]="totalStocks"
+  />
+
+  <!-- Middle Row: Portfolio Table + Movers -->
+  <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Portfolio Table (2/3 width) -->
+    <div class="lg:col-span-2">
+      <app-portfolio-table [portfolios]="portfolios" />
+    </div>
+
+    <!-- Top Gainers & Losers (1/3 width) -->
+    <div class="space-y-6">
+      <app-movers-panel title="Top Gainers" icon="up" [rows]="topGainers" />
+      <app-movers-panel title="Top Losers" icon="down" [rows]="topLosers" />
+    </div>
+  </div>
+
+  <!-- Bottom Row: Sector Charts -->
+  <div class="mt-6">
+    <app-sector-charts [sectorExposure]="sectorExposure" [pnlTrend]="pnlTrend" />
+  </div>
 </div>

@@ -1,3 +1,30 @@
-<div class="kpi-cards">
-  <!-- KPI cards content -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+  <!-- Total Portfolios -->
+  <div class="bg-gray-900 rounded-lg p-6 border border-gray-800">
+    <div class="text-gray-400 text-sm mb-2">Total Portfolios</div>
+    <div class="text-white text-3xl font-bold">{{ totalPortfolios() }}</div>
+  </div>
+
+  <!-- Total Value -->
+  <div class="bg-gray-900 rounded-lg p-6 border border-gray-800">
+    <div class="text-gray-400 text-sm mb-2">Total Value</div>
+    <div class="text-white text-3xl font-bold">{{ totalValue() | money }}</div>
+  </div>
+
+  <!-- Avg Daily PnL -->
+  <div class="bg-gray-900 rounded-lg p-6 border border-gray-800">
+    <div class="text-gray-400 text-sm mb-2">Avg Daily PnL</div>
+    <div
+      class="text-3xl font-bold"
+      [ngClass]="avgDailyPnlPct() >= 0 ? 'text-green-500' : 'text-red-500'"
+    >
+      {{ avgDailyPnlPct() >= 0 ? '+' : '' }}{{ avgDailyPnlPct().toFixed(2) }}%
+    </div>
+  </div>
+
+  <!-- Total Stocks -->
+  <div class="bg-gray-900 rounded-lg p-6 border border-gray-800">
+    <div class="text-gray-400 text-sm mb-2">Total Stocks</div>
+    <div class="text-white text-3xl font-bold">{{ totalStocks() }}</div>
+  </div>
 </div>

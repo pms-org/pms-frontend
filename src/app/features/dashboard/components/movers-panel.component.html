@@ -1,3 +1,25 @@
-<div class="movers-panel">
-  <!-- Top gainers/losers content -->
+<div class="bg-gray-900 rounded-lg border border-gray-800 p-6">
+  <div class="flex items-center gap-2 mb-4">
+    <span
+      class="text-lg"
+      [ngClass]="icon() === 'up' ? 'text-green-500' : 'text-red-500'"
+    >
+      {{ icon() === 'up' ? '↑' : '↓' }}
+    </span>
+    <h3 class="text-lg font-semibold text-white">{{ title() }}</h3>
+  </div>
+  <div class="space-y-3">
+    <div
+      *ngFor="let row of rows()"
+      class="flex items-center justify-between py-2 border-b border-gray-800 last:border-0"
+    >
+      <span class="text-sm font-medium text-gray-300">{{ row.symbol }}</span>
+      <span
+        class="text-sm font-semibold"
+        [ngClass]="icon() === 'up' ? 'text-green-500' : 'text-red-500'"
+      >
+        {{ icon() === 'up' ? '+' : '' }}{{ row.pct.toFixed(2) }}%
+      </span>
+    </div>
+  </div>
 </div>

@@ -1,3 +1,35 @@
-<div class="sector-charts">
-  <!-- Sector charts content -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Global Sector Exposure -->
+  <div class="bg-gray-900 rounded-lg border border-gray-800 p-6">
+    <h3 class="text-lg font-semibold text-white mb-4">Global Sector Exposure</h3>
+    <div class="flex flex-col lg:flex-row gap-6">
+      <div class="w-full lg:w-1/2 h-64">
+        <canvas #donutCanvas></canvas>
+      </div>
+      <div class="w-full lg:w-1/2 space-y-2">
+        <div *ngFor="let sector of sectorExposure()" class="flex justify-between items-center py-1">
+          <span class="text-sm text-gray-300">{{ sector.sector }}</span>
+          <span class="text-sm font-medium text-white">{{ sector.pct }}%</span>
+        </div>
+      </div>
+    </div>
+    <div class="mt-6 pt-4 border-t border-gray-800 grid grid-cols-2 gap-4">
+      <div>
+        <div class="text-xs text-gray-400 mb-1">Top Sector</div>
+        <div class="text-sm font-medium text-green-500">{{ topSector }}</div>
+      </div>
+      <div>
+        <div class="text-xs text-gray-400 mb-1">Lowest Sector</div>
+        <div class="text-sm font-medium text-red-500">{{ lowestSector }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily PnL Trend -->
+  <div class="bg-gray-900 rounded-lg border border-gray-800 p-6">
+    <h3 class="text-lg font-semibold text-white mb-4">Daily PnL Trend</h3>
+    <div class="h-80">
+      <canvas #lineCanvas></canvas>
+    </div>
+  </div>
 </div>

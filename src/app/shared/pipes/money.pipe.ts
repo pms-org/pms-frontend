@@ -1,11 +1,16 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'money'
+  name: 'money',
+  standalone: true
 })
 export class MoneyPipe implements PipeTransform {
   transform(value: number): string {
-    // Money formatting implementation
-    return value.toString();
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
   }
 }

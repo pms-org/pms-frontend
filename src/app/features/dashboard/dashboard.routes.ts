@@ -1,5 +1,9 @@
 import { Routes } from '@angular/router';
+import { DashboardPage } from './dashboard.page';
 
 export const dashboardRoutes: Routes = [
-  // Dashboard routes configuration
+  {
+    path: '',
+    component: DashboardPage
+  }
 ];
