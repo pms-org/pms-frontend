@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
+import { LeaderboardPage } from './leaderboard.page';
 
 export const leaderboardRoutes: Routes = [
-  // Leaderboard routes configuration
+  { path: '', component: LeaderboardPage }
 ];

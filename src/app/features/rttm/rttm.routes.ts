@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
+import { RttmPage } from './rttm.page';
 
 export const rttmRoutes: Routes = [
-  // RTTM routes configuration
+  { path: '', component: RttmPage }
 ];

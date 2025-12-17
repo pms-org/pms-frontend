@@ -1,0 +1,9 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+  <div *ngFor="let metric of metrics()" [class]="getStatusBg(metric.status)" class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
+    <div class="text-gray-400 text-sm mb-2">{{ metric.title }}</div>
+    <div [class]="getStatusClass(metric.status)" class="text-3xl font-bold">
+      {{ metric.value }}
+      <span *ngIf="metric.unit" class="text-lg ml-1">{{ metric.unit }}</span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- TPS Trend -->
+  <div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
+    <h3 class="text-sm font-medium text-gray-400 mb-4">TPS Trend</h3>
+    <div class="w-full">
+      <canvas #tpsCanvas></canvas>
+    </div>
+  </div>
+
+  <!-- Latency Metrics -->
+  <div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
+    <h3 class="text-sm font-medium text-gray-400 mb-4">Latency Metrics</h3>
+    <div class="w-full">
+      <canvas #latencyCanvas></canvas>
+    </div>
+  </div>
+
+  <!-- Kafka Partition Lag -->
+  <div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
+    <h3 class="text-sm font-medium text-gray-400 mb-4">Kafka Partition Lag</h3>
+    <div class="w-full">
+      <canvas #kafkaCanvas></canvas>
+    </div>
+  </div>
+</div>

@@ -1,4 +1,24 @@
-<div class="bg-gray-900 rounded-lg border border-gray-800 p-6">
-  <h1 class="text-xl font-semibold text-white mb-2">RTTM</h1>
-  <p class="text-gray-400">Coming soon.</p>
+<div class="min-h-screen bg-gray-950 p-6">
+  <!-- KPI Metrics -->
+  <app-metric-cards [metrics]="data().metrics" />
+
+  <!-- Pipeline Flow -->
+  <div class="mt-6">
+    <app-pipeline-flow [stages]="data().pipeline" />
+  </div>
+
+  <!-- Charts Row -->
+  <div class="mt-6">
+    <app-charts
+      [tpsTrend]="data().tpsTrend"
+      [latencyMetrics]="data().latencyMetrics"
+      [kafkaLag]="data().kafkaLag"
+    />
+  </div>
+
+  <!-- Bottom Row: DLQ + Alerts -->
+  <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <app-dlq-panel [dlq]="data().dlq" />
+    <app-alerts-panel [alerts]="data().alerts" />
+  </div>
 </div>

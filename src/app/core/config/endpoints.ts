@@ -13,8 +13,29 @@ export const ENDPOINTS = {
   },
 
   leaderboard: {
+    baseHttp: 'http://localhost:8083',
     baseWs: 'ws://localhost:8083',
-    wsSnapshots: '/ws/leaderboard'
+
+    // REST
+    portfolios: '/api/leaderboard/portfolios',  // GET List<Portfolio>
+
+    // WS
+    wsSnapshots: '/ws/leaderboard'  // emits LeaderboardSnapshot
+  },
+
+  rttm: {
+    baseHttp: 'http://localhost:8084',
+    baseWs: 'ws://localhost:8084',
+
+    // REST
+    metrics: '/api/rttm/metrics',        // GET MetricCard[]
+    pipeline: '/api/rttm/pipeline',      // GET PipelineStage[]
+    dlq: '/api/rttm/dlq',                // GET DLQ data
+
+    // WS
+    wsMetrics: '/ws/rttm/metrics',       // emits real-time metrics
+    wsPipeline: '/ws/rttm/pipeline',     // emits pipeline updates
+    wsAlerts: '/ws/rttm/alerts'          // emits Alert[]
   }
 };
 

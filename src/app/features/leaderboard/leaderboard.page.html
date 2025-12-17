@@ -1,4 +1,71 @@
-<div class="bg-gray-900 rounded-lg border border-gray-800 p-6">
-  <h1 class="text-xl font-semibold text-white mb-2">Leaderboard</h1>
-  <p class="text-gray-400">Wiring in progress.</p>
+<div class="min-h-screen bg-gray-950 p-6">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left Panel: Leaderboard Table -->
+    <div class="lg:col-span-2">
+      <app-leaderboard-table
+        [portfolios]="filteredPortfolios()"
+        [selectedId]="selectedPortfolio()?.portfolioId ?? ''"
+        [searchTerm]="searchTerm()"
+        [sortBy]="sortBy()"
+        [sectorFilter]="sectorFilter()"
+        [sectors]="sectors"
+        (search)="onSearch($event)"
+        (sortChange)="onSortChange($event)"
+        (sectorChange)="onSectorChange($event)"
+        (selectPortfolio)="onSelectPortfolio($event)"
+      />
+    </div>
+
+    <!-- Right Panel: Details -->
+    <div class="space-y-6">
+      <ng-container *ngIf="selectedPortfolio() as portfolio">
+        <!-- Summary Card -->
+        <div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
+          <h3 class="text-xl font-semibold text-white mb-4">{{ portfolio.name }}</h3>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-400">Last Updated</span>
+              <span class="text-gray-200">Just now</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Total Value</span>
+              <span class="text-white font-semibold">${{ (portfolio.totalValue / 1000000).toFixed(2) }}M</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Daily PnL</span>
+              <span [class]="portfolio.dailyPnl >= 0 ? 'text-green-400' : 'text-red-400'" class="font-semibold">
+                {{ portfolio.dailyPnl >= 0 ? '+' : '' }}{{ portfolio.dailyPnl.toFixed(2) }}%
+              </span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Stocks Held</span>
+              <span class="text-gray-200">{{ portfolio.stocks }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PnL Trend Chart -->
+        <div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
+          <h4 class="text-sm font-medium text-gray-400 mb-4">PnL Trend</h4>
+          <div class="w-full h-40">
+            <canvas #trendCanvas></canvas>
+          </div>
+        </div>
+
+        <!-- Sector Exposure -->
+        <div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
+          <h4 class="text-sm font-medium text-gray-400 mb-4">Sector Exposure</h4>
+          <div class="flex justify-center mb-4 w-40 h-40 mx-auto">
+            <canvas #donutCanvas></canvas>
+          </div>
+          <div class="space-y-2">
+            <div *ngFor="let sector of portfolio.sectorExposure" class="flex justify-between text-sm">
+              <span class="text-gray-400">{{ sector.sector }}</span>
+              <span class="text-gray-200">{{ sector.percentage }}%</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
 </div>

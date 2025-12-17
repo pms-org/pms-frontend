@@ -1,3 +1,104 @@
-<div class="leaderboard-table">
-  <!-- Leaderboard table content -->
+<div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-white">Portfolio Leaderboard</h2>
+  </div>
+
+  <!-- Filters -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <!-- Search -->
+    <input
+      type="text"
+      [value]="searchTerm()"
+      (input)="search.emit($any($event.target).value)"
+      placeholder="Search portfolio..."
+      class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+
+    <!-- Sort By -->
+    <select
+      [value]="sortBy()"
+      (change)="sortChange.emit($any($event.target).value)"
+      class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option value="rank">Sort by Rank</option>
+      <option value="dailyPnl">Sort by Daily PnL</option>
+      <option value="totalValue">Sort by Total Value</option>
+    </select>
+
+    <!-- Sector Filter -->
+    <select
+      [value]="sectorFilter()"
+      (change)="sectorChange.emit($any($event.target).value)"
+      class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option *ngFor="let sector of sectors()" [value]="sector">{{ sector }}</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="border-b border-gray-800">
+          <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Rank</th>
+          <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Portfolio</th>
+          <th class="text-right py-3 px-4 text-sm font-medium text-gray-400">Daily PnL</th>
+          <th class="text-right py-3 px-4 text-sm font-medium text-gray-400">Total Value</th>
+          <th class="text-center py-3 px-4 text-sm font-medium text-gray-400">Stocks</th>
+          <th class="text-center py-3 px-4 text-sm font-medium text-gray-400">Top Sector</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let portfolio of portfolios()"
+          (click)="selectPortfolio.emit(portfolio)"
+          [class.bg-gray-800/50]="selectedId() === portfolio.portfolioId"
+          class="border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition-colors"
+        >
+          <!-- Rank -->
+          <td class="py-4 px-4">
+            <div
+              [class]="getRankBadgeClass(portfolio.rank)"
+              class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+            >
+              {{ portfolio.rank }}
+            </div>
+          </td>
+
+          <!-- Portfolio Name -->
+          <td class="py-4 px-4">
+            <div class="text-white font-medium">{{ portfolio.name }}</div>
+          </td>
+
+          <!-- Daily PnL -->
+          <td class="py-4 px-4 text-right">
+            <span
+              [class]="portfolio.dailyPnl >= 0 ? 'text-green-400' : 'text-red-400'"
+              class="font-semibold"
+            >
+              {{ portfolio.dailyPnl >= 0 ? '+' : '' }}{{ portfolio.dailyPnl.toFixed(2) }}%
+            </span>
+          </td>
+
+          <!-- Total Value -->
+          <td class="py-4 px-4 text-right text-white font-medium">
+            ${{ (portfolio.totalValue / 1000000).toFixed(2) }}M
+          </td>
+
+          <!-- Stocks -->
+          <td class="py-4 px-4 text-center text-gray-300">
+            {{ portfolio.stocks }}
+          </td>
+
+          <!-- Top Sector -->
+          <td class="py-4 px-4 text-center">
+            <span class="inline-block bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-xs font-medium">
+              {{ portfolio.topSector }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
