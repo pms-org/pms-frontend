@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-rttm',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './rttm.page.html',
-  styleUrls: ['./rttm.page.css']
 })
 export class RttmPage {}

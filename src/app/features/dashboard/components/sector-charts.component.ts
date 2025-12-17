@@ -1,12 +1,11 @@
 import {
   Component,
   input,
-  OnInit,
   OnDestroy,
   ViewChild,
   ElementRef,
   AfterViewInit,
-  computed
+  effect
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectorExposure, PnlTrendPoint } from '../../../core/models/ui.models';
@@ -21,7 +20,7 @@ Chart.register(...registerables);
   templateUrl: './sector-charts.component.html',
   styleUrls: ['./sector-charts.component.css']
 })
-export class SectorChartsComponent implements OnInit, AfterViewInit, OnDestroy {
+export class SectorChartsComponent implements AfterViewInit, OnDestroy {
   sectorExposure = input<SectorExposure[]>([]);
   pnlTrend = input<PnlTrendPoint[]>([]);
 
@@ -30,22 +29,20 @@ export class SectorChartsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private donutChart?: Chart;
   private lineChart?: Chart;
+  private viewReady = false;
 
   topSector = '';
   lowestSector = '';
 
-  ngOnInit() {
-    const sectors = this.sectorExposure();
-    if (sectors.length > 0) {
-      const sorted = [...sectors].sort((a, b) => b.pct - a.pct);
-      this.topSector = sorted[0].sector;
-      this.lowestSector = sorted[sorted.length - 1].sector;
-    }
+  constructor() {
+    effect(() => this.syncSectorCharts(this.sectorExposure()));
+    effect(() => this.syncTrendChart(this.pnlTrend()));
   }
 
   ngAfterViewInit() {
-    this.initDonutChart();
-    this.initLineChart();
+    this.viewReady = true;
+    this.syncSectorCharts(this.sectorExposure());
+    this.syncTrendChart(this.pnlTrend());
   }
 
   ngOnDestroy() {
@@ -53,8 +50,38 @@ export class SectorChartsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.lineChart?.destroy();
   }
 
-  private initDonutChart() {
-    const sectors = this.sectorExposure();
+  private syncSectorCharts(sectors: SectorExposure[]) {
+    this.setSectorBadges(sectors);
+    if (!this.viewReady) {
+      return;
+    }
+
+    if (!this.donutChart) {
+      this.initDonutChart(sectors);
+      return;
+    }
+
+    this.donutChart.data.labels = sectors.map((s) => s.sector);
+    (this.donutChart.data.datasets[0].data as number[]) = sectors.map((s) => s.pct);
+    this.donutChart.update();
+  }
+
+  private syncTrendChart(trend: PnlTrendPoint[]) {
+    if (!this.viewReady) {
+      return;
+    }
+
+    if (!this.lineChart) {
+      this.initLineChart(trend);
+      return;
+    }
+
+    this.lineChart.data.labels = trend.map((p) => p.label);
+    (this.lineChart.data.datasets[0].data as number[]) = trend.map((p) => p.value);
+    this.lineChart.update();
+  }
+
+  private initDonutChart(sectors: SectorExposure[]) {
     const config: ChartConfiguration<'doughnut'> = {
       type: 'doughnut',
       data: {
@@ -77,8 +104,7 @@ export class SectorChartsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.donutChart = new Chart(this.donutCanvas.nativeElement, config);
   }
 
-  private initLineChart() {
-    const trend = this.pnlTrend();
+  private initLineChart(trend: PnlTrendPoint[]) {
     const config: ChartConfiguration<'line'> = {
       type: 'line',
       data: {
@@ -112,5 +138,16 @@ export class SectorChartsComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     };
     this.lineChart = new Chart(this.lineCanvas.nativeElement, config);
+  }
+
+  private setSectorBadges(sectors: SectorExposure[]) {
+    if (sectors.length > 0) {
+      const sorted = [...sectors].sort((a, b) => b.pct - a.pct);
+      this.topSector = sorted[0].sector;
+      this.lowestSector = sorted[sorted.length - 1].sector;
+    } else {
+      this.topSector = '';
+      this.lowestSector = '';
+    }
   }
 }

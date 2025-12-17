@@ -1,3 +1,11 @@
 export interface LeaderboardEntry {
-  // Leaderboard model definitions
+  portfolioId: string;
+  portfolioName: string;
+  pnl: number;
+  rank: number;
+}
+
+export interface LeaderboardSnapshot {
+  generatedAt: string;
+  entries: LeaderboardEntry[];
 }

@@ -11,7 +11,7 @@ import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 })
 export class KpiCardsComponent {
   totalPortfolios = input<number>(0);
-  totalValue = input<number>(0);
-  avgDailyPnlPct = input<number>(0);
+  totalInvestment = input<number>(0);
+  avgUnrealisedPnl = input<number>(0);
   totalStocks = input<number>(0);
 }

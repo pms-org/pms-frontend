@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-leaderboard',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './leaderboard.page.html',
-  styleUrls: ['./leaderboard.page.css']
 })
 export class LeaderboardPage {}

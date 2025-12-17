@@ -7,18 +7,18 @@
 
   <!-- Total Value -->
   <div class="bg-gray-900 rounded-lg p-6 border border-gray-800">
-    <div class="text-gray-400 text-sm mb-2">Total Value</div>
-    <div class="text-white text-3xl font-bold">{{ totalValue() | money }}</div>
+    <div class="text-gray-400 text-sm mb-2">Total Investment</div>
+    <div class="text-white text-3xl font-bold">{{ totalInvestment() | money }}</div>
   </div>
 
-  <!-- Avg Daily PnL -->
+  <!-- Avg Unrealised PnL -->
   <div class="bg-gray-900 rounded-lg p-6 border border-gray-800">
-    <div class="text-gray-400 text-sm mb-2">Avg Daily PnL</div>
+    <div class="text-gray-400 text-sm mb-2">Avg Unrealised PnL</div>
     <div
       class="text-3xl font-bold"
-      [ngClass]="avgDailyPnlPct() >= 0 ? 'text-green-500' : 'text-red-500'"
+      [ngClass]="avgUnrealisedPnl() >= 0 ? 'text-green-500' : 'text-red-500'"
     >
-      {{ avgDailyPnlPct() >= 0 ? '+' : '' }}{{ avgDailyPnlPct().toFixed(2) }}%
+      {{ avgUnrealisedPnl() | money }}
     </div>
   </div>
 

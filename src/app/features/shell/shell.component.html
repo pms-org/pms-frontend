@@ -1,3 +1,118 @@
-<div class="shell-container">
-  <router-outlet></router-outlet>
+<div class="min-h-screen bg-gray-950 text-gray-100">
+  <!-- Top Header -->
+  <header class="sticky top-0 z-50 border-b border-gray-800 bg-gray-950/80 backdrop-blur">
+    <div class="mx-auto max-w-7xl px-6">
+      <div class="flex h-16 items-center justify-between">
+        <!-- Brand -->
+        <div class="flex items-center gap-4">
+          <div class="text-xl font-semibold tracking-tight text-cyan-300">
+            Portfolio Management System
+          </div>
+          <!--Tabs-->
+          <nav class="hidden md:flex items-center gap-3">
+            <!-- Dashboard -->
+            <a
+              routerLink="/dashboard"
+              routerLinkActive="bg-cyan-500/10 text-cyan-300 border-cyan-400/30"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="flex items-center gap-2 rounded-xl border border-transparent px-4 py-2 text-sm font-medium text-gray-300 hover:text-cyan-200 hover:bg-white/5 transition"
+            >
+              <!-- Dashboard Icon -->
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+              </svg>
+              Dashboard
+            </a>
+
+            <!-- Leaderboard -->
+            <a
+              routerLink="/leaderboard"
+              routerLinkActive="bg-cyan-500/10 text-cyan-300 border-cyan-400/30"
+              class="flex items-center gap-2 rounded-xl border border-transparent px-4 py-2 text-sm font-medium text-gray-300 hover:text-cyan-200 hover:bg-white/5 transition"
+            >
+              <!-- Trophy Icon -->
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M8 21h8"></path>
+                <path d="M12 17v4"></path>
+                <path d="M7 4h10v3a5 5 0 0 1-10 0V4z"></path>
+                <path d="M5 7a3 3 0 0 0 3 3"></path>
+                <path d="M19 7a3 3 0 0 1-3 3"></path>
+              </svg>
+              Leaderboard
+            </a>
+
+            <!-- RTTM -->
+            <a
+              routerLink="/rttm"
+              routerLinkActive="bg-cyan-500/10 text-cyan-300 border-cyan-400/30"
+              class="flex items-center gap-2 rounded-xl border border-transparent px-4 py-2 text-sm font-medium text-gray-300 hover:text-cyan-200 hover:bg-white/5 transition"
+            >
+              <!-- Activity / Pulse Icon -->
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              RTTM
+            </a>
+          </nav>
+        </div>
+
+        <!-- Right side Live -->
+        <div class="flex items-center gap-3">
+          <span class="h-2.5 w-2.5 rounded-full bg-green-500"></span>
+          <span class="text-sm text-gray-300">Live</span>
+        </div>
+      </div>
+
+      <!-- Mobile tabs -->
+      <nav class="md:hidden pb-3 flex gap-2">
+        <a
+          routerLink="/dashboard"
+          routerLinkActive="bg-cyan-500/10 text-cyan-300 border-cyan-400/30"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex-1 text-center rounded-xl border border-transparent px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 transition"
+          >Dashboard</a
+        >
+
+        <a
+          routerLink="/leaderboard"
+          routerLinkActive="bg-cyan-500/10 text-cyan-300 border-cyan-400/30"
+          class="flex-1 text-center rounded-xl border border-transparent px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 transition"
+          >Leaderboard</a
+        >
+
+        <a
+          routerLink="/rttm"
+          routerLinkActive="bg-cyan-500/10 text-cyan-300 border-cyan-400/30"
+          class="flex-1 text-center rounded-xl border border-transparent px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 transition"
+          >RTTM</a
+        >
+      </nav>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main class="mx-auto max-w-7xl px-6 py-6">
+    <router-outlet></router-outlet>
+  </main>
 </div>
