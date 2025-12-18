@@ -24,17 +24,21 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.page').then(m => m.DashboardPage),
+          import('./features/dashboard/dashboard.page').then((m) => m.DashboardPage),
       },
       {
         path: 'leaderboard',
         loadComponent: () =>
-          import('./features/leaderboard/leaderboard.page').then(m => m.LeaderboardPage),
+          import('./features/leaderboard/leaderboard.page').then((m) => m.LeaderboardPage),
       },
       {
         path: 'rttm',
+        loadComponent: () => import('./features/rttm/rttm.page').then((m) => m.RttmPage),
+      },
+      {
+        path: 'portfolio/:portfolioId',
         loadComponent: () =>
-          import('./features/rttm/rttm.page').then(m => m.RttmPage),
+          import('./features/portfolio/portfolio.page/portfolio.page').then((m) => m.PortfolioPage),
       },
     ],
   },

@@ -1,5 +1,4 @@
 <div class="min-h-screen bg-gray-950 p-6">
-  <!-- KPI Cards Row -->
   <ng-container *ngIf="kpis$ | async as kpis">
     <app-kpi-cards
       [totalPortfolios]="kpis.totalPortfolios"
@@ -9,14 +8,11 @@
     />
   </ng-container>
 
-  <!-- Middle Row: Portfolio Table + Movers -->
   <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Portfolio Table (2/3 width) -->
     <div class="lg:col-span-2">
       <app-portfolio-table [portfolios]="(dashboardRows$ | async) ?? []" />
     </div>
 
-    <!-- Top Gainers & Losers (1/3 width) -->
     <div class="space-y-6">
       <ng-container *ngIf="movers$ | async as movers">
         <app-movers-panel title="Top Gainers" icon="up" [rows]="movers.topGainers" />
@@ -25,10 +21,22 @@
     </div>
   </div>
 
-  <!-- Bottom Row: Sector Charts -->
   <div class="mt-6">
     <ng-container *ngIf="sectorExposure$ | async as exposure">
-      <app-sector-charts [sectorExposure]="exposure" [pnlTrend]="(pnlTrend$ | async) ?? []" />
+      <app-sector-charts
+        [sectorExposure]="exposure"
+        [pnlTrend]="(pnlTrend$ | async) ?? []"
+        (sectorClicked)="openSectorModal($event)"
+      />
     </ng-container>
   </div>
+
+  <!-- Modal -->
+<app-sector-modal
+  *ngIf="sectorModalOpen"
+  [sectorName]="selectedSector"
+  [rows]="sectorRows"
+  (closed)="closeSectorModal()"
+/>
+
 </div>

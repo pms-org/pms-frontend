@@ -1,5 +1,6 @@
-import { Component, input } from '@angular/core';
+import { Component, input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { PortfolioOverviewRow } from '../../../core/models/ui.models';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 
@@ -11,5 +12,10 @@ import { MoneyPipe } from '../../../shared/pipes/money.pipe';
   styleUrls: ['./portfolio-table.component.css']
 })
 export class PortfolioTableComponent {
+  private readonly router = inject(Router);
   portfolios = input<PortfolioOverviewRow[]>([]);
+
+  goToPortfolio(portfolioId: string) {
+    this.router.navigate(['/portfolio', portfolioId]);
+  }
 }

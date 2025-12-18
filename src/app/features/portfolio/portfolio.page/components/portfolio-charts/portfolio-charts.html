@@ -1,0 +1,25 @@
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Donut -->
+  <div class="bg-gray-900 rounded-lg border border-gray-800 p-6">
+    <h3 class="text-lg font-semibold text-white mb-4">Portfolio Sector Composition</h3>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="h-64">
+        <canvas #donutCanvas></canvas>
+      </div>
+      <div class="space-y-2">
+        <div *ngFor="let s of sectors()" class="flex justify-between items-center py-1">
+          <span class="text-sm text-gray-300">{{ s.sector }}</span>
+          <span class="text-sm font-medium text-white">{{ s.pct }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Line -->
+  <div class="bg-gray-900 rounded-lg border border-gray-800 p-6">
+    <h3 class="text-lg font-semibold text-white mb-4">Daily PnL Trend</h3>
+    <div class="h-80">
+      <canvas #lineCanvas></canvas>
+    </div>
+  </div>
+</div>

@@ -29,7 +29,11 @@
       </thead>
 
       <tbody class="divide-y divide-gray-800">
-        <tr *ngFor="let p of portfolios()" class="hover:bg-gray-800/30">
+        <tr
+          *ngFor="let p of portfolios()"
+          class="hover:bg-gray-800/30 cursor-pointer"
+          (click)="goToPortfolio(p.portfolioId)"
+        >
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
             {{ p.investorName }}
           </td>

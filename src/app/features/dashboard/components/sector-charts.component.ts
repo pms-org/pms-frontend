@@ -1,11 +1,12 @@
 import {
   Component,
   input,
+  output,
   OnDestroy,
   ViewChild,
   ElementRef,
   AfterViewInit,
-  effect
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectorExposure, PnlTrendPoint } from '../../../core/models/ui.models';
@@ -18,11 +19,13 @@ Chart.register(...registerables);
   standalone: true,
   imports: [CommonModule],
   templateUrl: './sector-charts.component.html',
-  styleUrls: ['./sector-charts.component.css']
+  styleUrls: ['./sector-charts.component.css'],
 })
 export class SectorChartsComponent implements AfterViewInit, OnDestroy {
   sectorExposure = input<SectorExposure[]>([]);
   pnlTrend = input<PnlTrendPoint[]>([]);
+
+  sectorClicked = output<string>(); // ✅ NEW
 
   @ViewChild('donutCanvas') donutCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('lineCanvas') lineCanvas!: ElementRef<HTMLCanvasElement>;
@@ -52,9 +55,7 @@ export class SectorChartsComponent implements AfterViewInit, OnDestroy {
 
   private syncSectorCharts(sectors: SectorExposure[]) {
     this.setSectorBadges(sectors);
-    if (!this.viewReady) {
-      return;
-    }
+    if (!this.viewReady) return;
 
     if (!this.donutChart) {
       this.initDonutChart(sectors);
@@ -66,10 +67,50 @@ export class SectorChartsComponent implements AfterViewInit, OnDestroy {
     this.donutChart.update();
   }
 
+  private initDonutChart(sectors: SectorExposure[]) {
+    const config: ChartConfiguration<'doughnut'> = {
+      type: 'doughnut',
+      data: {
+        labels: sectors.map((s) => s.sector),
+        datasets: [{ data: sectors.map((s) => s.pct), borderWidth: 0 }],
+      },
+      // options: {
+      //   responsive: true,
+      //   maintainAspectRatio: false,
+      //   plugins: { legend: { display: false } },
+      //   onClick: (_evt, elements) => {
+      //     if (!elements?.length) return;
+      //     const idx = elements[0].index;
+      //     const sector = (this.donutChart?.data.labels?.[idx] as string) ?? '';
+      //     if (sector) this.sectorClicked.emit(sector); // ✅ fire event
+      //   }
+      // }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+
+        onHover: (evt, elements) => {
+          const canvas =
+            (evt?.native?.target as HTMLCanvasElement) ?? this.donutCanvas?.nativeElement;
+          if (!canvas) return;
+          canvas.style.cursor = elements?.length ? 'pointer' : 'default';
+        },
+
+        onClick: (_evt, elements) => {
+          if (!elements?.length) return;
+          const idx = elements[0].index;
+          const sector = (this.donutChart?.data.labels?.[idx] as string) ?? '';
+          if (sector) this.sectorClicked.emit(sector);
+        },
+      },
+    };
+
+    this.donutChart = new Chart(this.donutCanvas.nativeElement, config);
+  }
+
   private syncTrendChart(trend: PnlTrendPoint[]) {
-    if (!this.viewReady) {
-      return;
-    }
+    if (!this.viewReady) return;
 
     if (!this.lineChart) {
       this.initLineChart(trend);
@@ -79,29 +120,6 @@ export class SectorChartsComponent implements AfterViewInit, OnDestroy {
     this.lineChart.data.labels = trend.map((p) => p.label);
     (this.lineChart.data.datasets[0].data as number[]) = trend.map((p) => p.value);
     this.lineChart.update();
-  }
-
-  private initDonutChart(sectors: SectorExposure[]) {
-    const config: ChartConfiguration<'doughnut'> = {
-      type: 'doughnut',
-      data: {
-        labels: sectors.map((s) => s.sector),
-        datasets: [
-          {
-            data: sectors.map((s) => s.pct),
-            borderWidth: 0
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        }
-      }
-    };
-    this.donutChart = new Chart(this.donutCanvas.nativeElement, config);
   }
 
   private initLineChart(trend: PnlTrendPoint[]) {
@@ -115,28 +133,17 @@ export class SectorChartsComponent implements AfterViewInit, OnDestroy {
             data: trend.map((p) => p.value),
             borderWidth: 2,
             tension: 0.4,
-            fill: false
-          }
-        ]
+            fill: false,
+          },
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          y: {
-            grid: { color: 'rgba(255,255,255,0.1)' },
-            ticks: { color: '#9ca3af' }
-          },
-          x: {
-            grid: { color: 'rgba(255,255,255,0.1)' },
-            ticks: { color: '#9ca3af' }
-          }
-        }
-      }
+        plugins: { legend: { display: false } },
+      },
     };
+
     this.lineChart = new Chart(this.lineCanvas.nativeElement, config);
   }
 

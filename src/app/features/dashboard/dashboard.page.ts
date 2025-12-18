@@ -7,13 +7,22 @@ import { PortfolioTableComponent } from './components/portfolio-table.component'
 import { MoversPanelComponent } from './components/movers-panel.component';
 import { SectorChartsComponent } from './components/sector-charts.component';
 
-import { PmsStore } from '../../core/state/pms.store';
+import { PmsMockStore as PmsStore } from '../../core/state/pms.mock-store'; // keep mock for now
 import { DashboardKpis, MoversView, PortfolioOverviewRow, PnlTrendPoint, SectorExposure } from '../../core/models/ui.models';
+import { MOCK_SECTOR_BREAKDOWN } from '../../core/mock/sector-breakdown.mock-data';
+import { SectorModalComponent, SectorSymbolRow } from './components/sector-modal/sector-modal';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, KpiCardsComponent, PortfolioTableComponent, MoversPanelComponent, SectorChartsComponent],
+  imports: [
+    CommonModule,
+    KpiCardsComponent,
+    PortfolioTableComponent,
+    MoversPanelComponent,
+    SectorChartsComponent,
+    SectorModalComponent
+  ],
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.css']
 })
@@ -26,7 +35,24 @@ export class DashboardPage implements OnInit {
   readonly sectorExposure$: Observable<SectorExposure[]> = this.store.sectorExposure$;
   readonly pnlTrend$: Observable<PnlTrendPoint[]> = this.store.pnlTrend$;
 
+  // modal state
+  sectorModalOpen = false;
+  selectedSector = '';
+  sectorRows: SectorSymbolRow[] = [];
+
   ngOnInit(): void {
     this.store.init();
+  }
+
+  openSectorModal(sector: string) {
+    this.selectedSector = sector;
+    this.sectorRows = MOCK_SECTOR_BREAKDOWN[sector] ?? [];
+    this.sectorModalOpen = true;
+  }
+
+  closeSectorModal() {
+    this.sectorModalOpen = false;
+    this.selectedSector = '';
+    this.sectorRows = [];
   }
 }
