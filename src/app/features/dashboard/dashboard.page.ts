@@ -7,7 +7,7 @@ import { PortfolioTableComponent } from './components/portfolio-table.component'
 import { MoversPanelComponent } from './components/movers-panel.component';
 import { SectorChartsComponent } from './components/sector-charts.component';
 
-import { PmsMockStore as PmsStore } from '../../core/state/pms.mock-store'; // keep mock for now
+import { PmsStore } from '../../core/state/pms.store';
 import { DashboardKpis, MoversView, PortfolioOverviewRow, PnlTrendPoint, SectorExposure } from '../../core/models/ui.models';
 import { MOCK_SECTOR_BREAKDOWN } from '../../core/mock/sector-breakdown.mock-data';
 import { SectorModalComponent, SectorSymbolRow } from './components/sector-modal/sector-modal';

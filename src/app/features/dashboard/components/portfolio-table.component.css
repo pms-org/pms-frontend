@@ -1,1 +1,11 @@
 /* Portfolio table uses Tailwind utility classes */
+
+.blink-highlight {
+  animation: blink 2s ease-in-out;
+}
+
+@keyframes blink {
+  0%, 100% { background-color: transparent; }
+  25%, 75% { background-color: rgba(59, 130, 246, 0.3); }
+  50% { background-color: rgba(59, 130, 246, 0.5); }
+}

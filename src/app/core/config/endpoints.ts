@@ -22,7 +22,7 @@ export const ENDPOINTS = {
     around: '/api/leaderboard/around',          // GET rankings around portfolio
 
     // WS
-    wsSnapshots: '/ws/leaderboard',             // emits LeaderboardSnapshot
+    wsSnapshots: '/ws/updates',                 // Spring Boot WebSocket endpoint
     wsTop: '/ws/leaderboard/top',               // emits top performers updates
     wsAround: '/ws/leaderboard/around'          // emits around portfolio updates
   },

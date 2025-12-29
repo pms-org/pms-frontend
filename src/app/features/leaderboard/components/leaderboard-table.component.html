@@ -5,7 +5,7 @@
   </div>
 
   <!-- Filters -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
     <!-- Endpoint Selector -->
     <select
       [value]="endpointOption()"
@@ -36,15 +36,49 @@
       <option value="compositeScore">Sort by Composite Score</option>
       <option value="avgReturn">Sort by Avg Return</option>
     </select>
+  </div>
 
-    <!-- Sector Filter -->
-    <select
-      [value]="sectorFilter()"
-      (change)="sectorChange.emit($any($event.target).value)"
-      class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    >
-      <option *ngFor="let sector of sectors()" [value]="sector">{{ sector }}</option>
-    </select>
+  <!-- Dynamic Options based on endpoint selection -->
+  <div class="mb-6" *ngIf="endpointOption() === 'top'">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-400 mb-2">Top Value</label>
+        <input
+          type="number"
+          [value]="topValue()"
+          (input)="topValueChange.emit(+$any($event.target).value)"
+          min="1"
+          max="100"
+          class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-6" *ngIf="endpointOption() === 'around'">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-400 mb-2">Portfolio ID</label>
+        <input
+          type="text"
+          [value]="portfolioId()"
+          (input)="portfolioIdChange.emit($any($event.target).value)"
+          placeholder="Enter portfolio ID"
+          class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+        />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-400 mb-2">Range</label>
+        <input
+          type="number"
+          [value]="range()"
+          (input)="rangeChange.emit(+$any($event.target).value)"
+          min="1"
+          max="50"
+          class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+        />
+      </div>
+    </div>
   </div>
 
   <!-- Table -->

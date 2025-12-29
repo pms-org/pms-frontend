@@ -7,14 +7,17 @@
         [selectedId]="selectedPortfolio()?.portfolioId ?? ''"
         [searchTerm]="searchTerm()"
         [sortBy]="sortBy()"
-        [sectorFilter]="sectorFilter()"
-        [sectors]="sectors"
         [endpointOption]="endpointOption()"
+        [topValue]="topValue()"
+        [portfolioId]="portfolioId()"
+        [range]="range()"
         (search)="onSearch($event)"
         (sortChange)="onSortChange($event)"
-        (sectorChange)="onSectorChange($event)"
         (selectPortfolio)="onSelectPortfolio($event)"
         (endpointChange)="onEndpointChange($event)"
+        (topValueChange)="onTopValueChange($event)"
+        (portfolioIdChange)="onPortfolioIdChange($event)"
+        (rangeChange)="onRangeChange($event)"
       />
     </div>
 

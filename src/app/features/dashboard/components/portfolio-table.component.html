@@ -32,6 +32,7 @@
         <tr
           *ngFor="let p of portfolios()"
           class="hover:bg-gray-800/30 cursor-pointer"
+          [ngClass]="{'blink-highlight': isBlinking(p.portfolioId)}"
           (click)="goToPortfolio(p.portfolioId)"
         >
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">

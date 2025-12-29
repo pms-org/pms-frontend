@@ -18,15 +18,18 @@ export class LeaderboardTableComponent {
   selectedId = input<string>('');
   searchTerm = input<string>('');
   sortBy = input<SortOption>('rank');
-  sectorFilter = input<string>('All');
-  sectors = input<string[]>([]);
   endpointOption = input<EndpointOption>('all');
+  topValue = input<number>(3);
+  portfolioId = input<string>('');
+  range = input<number>(1);
 
   search = output<string>();
   sortChange = output<SortOption>();
-  sectorChange = output<string>();
   selectPortfolio = output<Portfolio>();
   endpointChange = output<EndpointOption>();
+  topValueChange = output<number>();
+  portfolioIdChange = output<string>();
+  rangeChange = output<number>();
 
   getRankBadgeClass(rank: number): string {
     if (rank === 1) return 'bg-yellow-500 text-gray-900';

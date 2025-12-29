@@ -4,8 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { LeaderboardTableComponent } from './components/leaderboard-table.component';
 import { Portfolio } from '../../core/models/leaderboard.models';
 import { LeaderboardApiService } from '../../core/services/leaderboard-api.service';
+import { LeaderboardWsService } from '../../core/services/leaderboard-ws.service';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
-import { interval, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 Chart.register(...registerables);
 
@@ -24,7 +25,8 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('donutCanvas') donutCanvas!: ElementRef<HTMLCanvasElement>;
 
   private leaderboardApi = inject(LeaderboardApiService);
-  private refreshSubscription?: Subscription;
+  private leaderboardWs = inject(LeaderboardWsService);
+  private wsSubscription?: Subscription;
 
   portfolios = signal<Portfolio[]>([]);
   filteredPortfolios = signal<Portfolio[]>([]);
@@ -32,10 +34,12 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
   
   searchTerm = signal('');
   sortBy = signal<SortOption>('rank');
-  sectorFilter = signal('All');
-  endpointOption = signal<EndpointOption>('top');
-
-  sectors = ['All', 'Technology', 'Finance', 'Healthcare', 'Energy', 'Consumer'];
+  endpointOption = signal<EndpointOption>('all');
+  
+  // User input fields
+  topValue = signal(3);
+  portfolioId = signal('b8ee55ff-2222-4e53-b0c9-555599775533');
+  range = signal(1);
 
   private trendChart?: Chart;
   private donutChart?: Chart;
@@ -51,12 +55,18 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.loadData();
-    this.startAutoRefresh();
+    console.log('LeaderboardPage initialized');
+    console.log('Current endpoint option:', this.endpointOption());
+    
+    // Test WebSocket server availability first
+    this.leaderboardWs.isServerAvailable().then((available: boolean) => {
+      console.log('WebSocket server available:', available);
+      this.loadData();
+    });
   }
 
   ngOnDestroy() {
-    this.refreshSubscription?.unsubscribe();
+    this.wsSubscription?.unsubscribe();
   }
 
   ngAfterViewInit() {
@@ -67,54 +77,85 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
     }
   }
 
-  private startAutoRefresh() {
-    this.refreshSubscription = interval(5000).subscribe(() => {
-      this.loadData();
-    });
-  }
+
 
   onEndpointChange(option: EndpointOption) {
+    this.wsSubscription?.unsubscribe();
     this.endpointOption.set(option);
     this.loadData();
+  }
+
+  onTopValueChange(value: number) {
+    this.topValue.set(value);
+    if (this.endpointOption() === 'top') {
+      this.loadData();
+    }
+  }
+
+  onPortfolioIdChange(id: string) {
+    this.portfolioId.set(id);
+    if (this.endpointOption() === 'around') {
+      this.loadData();
+    }
+  }
+
+  onRangeChange(range: number) {
+    this.range.set(range);
+    if (this.endpointOption() === 'around') {
+      this.loadData();
+    }
   }
 
   private loadData() {
     const option = this.endpointOption();
     console.log('Loading data for option:', option);
     
-    if (option === 'top') {
-      this.leaderboardApi.getTopPerformers(50).subscribe({
+    if (option === 'all') {
+      // Try WebSocket first, fallback to HTTP API
+      this.wsSubscription = this.leaderboardWs.stream().subscribe({
+        next: data => {
+          console.log('WebSocket data:', data);
+          this.handleWsResponse(data);
+        },
+        error: err => {
+          console.error('WebSocket error, falling back to HTTP API:', err);
+          // Fallback to HTTP API instead of mock data
+          this.leaderboardApi.getTopPerformers().subscribe({
+            next: data => {
+              console.log('Fallback HTTP data:', data);
+              this.handleApiResponse(data);
+            },
+            error: httpErr => {
+              console.error('HTTP API also failed:', httpErr);
+              this.handleMockData();
+            }
+          });
+        }
+      });
+    } else if (option === 'top') {
+      // Use HTTP API for top performers
+      const topValue = this.topValue();
+      this.leaderboardApi.getTopPerformers(topValue).subscribe({
         next: data => {
           console.log('Top performers data:', data);
           this.handleApiResponse(data);
         },
         error: err => {
           console.error('Error loading top performers:', err);
-          // Fallback to mock data on error
           this.handleMockData();
         }
       });
     } else if (option === 'around') {
-      const portfolioId = 'b8ee55ff-2222-4e53-b0c9-555599775533';
-      this.leaderboardApi.getRankingsAround(portfolioId, 10).subscribe({
+      // Use HTTP API for around portfolio
+      const portfolioId = this.portfolioId();
+      const range = this.range();
+      this.leaderboardApi.getRankingsAround(portfolioId, range).subscribe({
         next: data => {
           console.log('Around data:', data);
           this.handleApiResponse(data);
         },
         error: err => {
           console.error('Error loading around data:', err);
-          this.handleMockData();
-        }
-      });
-    } else {
-      // For 'all' option, use top performers as fallback
-      this.leaderboardApi.getTopPerformers().subscribe({
-        next: data => {
-          console.log('All portfolios data:', data);
-          this.handleApiResponse(data);
-        },
-        error: err => {
-          console.error('Error loading portfolios:', err);
           this.handleMockData();
         }
       });
@@ -168,6 +209,43 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
     if (portfolios.length > 0) this.selectedPortfolio.set(portfolios[0]);
   }
 
+  private handleWsResponse(data: any) {
+    console.log('Raw WebSocket response:', data);
+    // Handle different possible data structures
+    let entriesArray: any[] = [];
+    
+    if (Array.isArray(data)) {
+      entriesArray = data;
+    } else if (data.top && Array.isArray(data.top)) {
+      entriesArray = data.top;
+    } else if (data.entries && Array.isArray(data.entries)) {
+      entriesArray = data.entries;
+    } else if (data.portfolios && Array.isArray(data.portfolios)) {
+      entriesArray = data.portfolios;
+    } else {
+      console.warn('WebSocket data is not in expected format:', data);
+      return;
+    }
+    
+    const portfolios: Portfolio[] = entriesArray.map((item: any) => ({
+      rank: item.rank,
+      portfolioId: item.portfolioId,
+      name: item.portfolioName,
+      compositeScore: item.compositeScore || 0,
+      avgReturn: parseFloat(item.pnl || item.avgReturn || 0),
+      sharpe: item.sharpe || 'N/A',
+      sortino: item.sortino || 'N/A',
+      updatedAt: data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString()
+    }));
+    
+    console.log('Converted portfolios from WS:', portfolios);
+    this.portfolios.set(portfolios);
+    this.applyFilters();
+    if (portfolios.length > 0 && !this.selectedPortfolio()) {
+      this.selectedPortfolio.set(portfolios[0]);
+    }
+  }
+
   onSearch(term: string) {
     this.searchTerm.set(term);
     this.applyFilters();
@@ -178,10 +256,7 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  onSectorChange(sector: string) {
-    this.sectorFilter.set(sector);
-    this.applyFilters();
-  }
+
 
   onSelectPortfolio(portfolio: Portfolio) {
     this.selectedPortfolio.set(portfolio);
@@ -193,10 +268,6 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
     if (this.searchTerm()) {
       const term = this.searchTerm().toLowerCase();
       result = result.filter(p => p.portfolioId.toLowerCase().includes(term));
-    }
-
-    if (this.sectorFilter() !== 'All') {
-      result = result.filter(p => p.topSector === this.sectorFilter());
     }
 
     const sortKey = this.sortBy();
