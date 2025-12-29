@@ -13,13 +13,19 @@ export interface LeaderboardSnapshot {
 export interface Portfolio {
   rank: number;
   portfolioId: string;
-  name: string;
-  dailyPnl: number;
-  totalValue: number;
-  stocks: number;
-  topSector: string;
-  sectorExposure: SectorBreakdown[];
-  pnlTrend: number[];
+  name?: string;
+  compositeScore?: number;
+  avgReturn?: number;
+  sharpe?: string;
+  sortino?: string;
+  updatedAt?: string;
+  // Legacy fields for backward compatibility
+  dailyPnl?: number;
+  totalValue?: number;
+  stocks?: number;
+  topSector?: string;
+  sectorExposure?: SectorBreakdown[];
+  pnlTrend?: number[];
 }
 
 export interface SectorBreakdown {

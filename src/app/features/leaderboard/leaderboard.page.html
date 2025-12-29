@@ -9,10 +9,12 @@
         [sortBy]="sortBy()"
         [sectorFilter]="sectorFilter()"
         [sectors]="sectors"
+        [endpointOption]="endpointOption()"
         (search)="onSearch($event)"
         (sortChange)="onSortChange($event)"
         (sectorChange)="onSectorChange($event)"
         (selectPortfolio)="onSelectPortfolio($event)"
+        (endpointChange)="onEndpointChange($event)"
       />
     </div>
 
@@ -21,7 +23,7 @@
       <ng-container *ngIf="selectedPortfolio() as portfolio">
         <!-- Summary Card -->
         <div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
-          <h3 class="text-xl font-semibold text-white mb-4">{{ portfolio.name }}</h3>
+          <h3 class="text-xl font-semibold text-white mb-4">{{ portfolio.portfolioId }}</h3>
           <div class="space-y-3 text-sm">
             <div class="flex justify-between">
               <span class="text-gray-400">Last Updated</span>
@@ -29,12 +31,12 @@
             </div>
             <div class="flex justify-between">
               <span class="text-gray-400">Total Value</span>
-              <span class="text-white font-semibold">${{ (portfolio.totalValue / 1000000).toFixed(2) }}M</span>
+            <div class="text-white font-semibold">${{ ((portfolio.totalValue || 0) / 1000000).toFixed(2) }}M</div>
             </div>
             <div class="flex justify-between">
               <span class="text-gray-400">Daily PnL</span>
-              <span [class]="portfolio.dailyPnl >= 0 ? 'text-green-400' : 'text-red-400'" class="font-semibold">
-                {{ portfolio.dailyPnl >= 0 ? '+' : '' }}{{ portfolio.dailyPnl.toFixed(2) }}%
+              <span [class]="(portfolio.dailyPnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'" class="font-semibold">
+                {{ (portfolio.dailyPnl || 0) >= 0 ? '+' : '' }}{{ (portfolio.dailyPnl || 0).toFixed(2) }}%
               </span>
             </div>
             <div class="flex justify-between">

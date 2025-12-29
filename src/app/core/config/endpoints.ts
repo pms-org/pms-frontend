@@ -13,14 +13,18 @@ export const ENDPOINTS = {
   },
 
   leaderboard: {
-    baseHttp: 'http://localhost:8083',
-    baseWs: 'ws://localhost:8083',
+    baseHttp: 'http://localhost:8000',
+    baseWs: 'ws://localhost:8000',
 
     // REST
     portfolios: '/api/leaderboard/portfolios',  // GET List<Portfolio>
+    top: '/api/leaderboard/top',                // GET top performers
+    around: '/api/leaderboard/around',          // GET rankings around portfolio
 
     // WS
-    wsSnapshots: '/ws/leaderboard'  // emits LeaderboardSnapshot
+    wsSnapshots: '/ws/leaderboard',             // emits LeaderboardSnapshot
+    wsTop: '/ws/leaderboard/top',               // emits top performers updates
+    wsAround: '/ws/leaderboard/around'          // emits around portfolio updates
   },
 
   rttm: {

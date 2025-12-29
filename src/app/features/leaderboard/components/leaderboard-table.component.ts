@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Portfolio } from '../../../core/models/leaderboard.models';
 
+type SortOption = 'rank' | 'compositeScore' | 'avgReturn';
+type EndpointOption = 'all' | 'top' | 'around';
+
 @Component({
   selector: 'app-leaderboard-table',
   standalone: true,
@@ -14,14 +17,16 @@ export class LeaderboardTableComponent {
   portfolios = input<Portfolio[]>([]);
   selectedId = input<string>('');
   searchTerm = input<string>('');
-  sortBy = input<'rank' | 'dailyPnl' | 'totalValue'>('rank');
+  sortBy = input<SortOption>('rank');
   sectorFilter = input<string>('All');
   sectors = input<string[]>([]);
+  endpointOption = input<EndpointOption>('all');
 
   search = output<string>();
-  sortChange = output<'rank' | 'dailyPnl' | 'totalValue'>();
+  sortChange = output<SortOption>();
   sectorChange = output<string>();
   selectPortfolio = output<Portfolio>();
+  endpointChange = output<EndpointOption>();
 
   getRankBadgeClass(rank: number): string {
     if (rank === 1) return 'bg-yellow-500 text-gray-900';

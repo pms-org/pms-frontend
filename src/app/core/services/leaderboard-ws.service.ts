@@ -7,6 +7,8 @@ import { LeaderboardSnapshot } from '../models/leaderboard.models';
 @Injectable({ providedIn: 'root' })
 export class LeaderboardWsService {
   private socket$?: WebSocketSubject<LeaderboardSnapshot>;
+  private topSocket$?: WebSocketSubject<any>;
+  private aroundSocket$?: WebSocketSubject<any>;
 
   stream(): Observable<LeaderboardSnapshot> {
     if (!this.socket$) {
@@ -16,5 +18,25 @@ export class LeaderboardWsService {
       });
     }
     return this.socket$.pipe(share());
+  }
+
+  streamTop(): Observable<any> {
+    if (!this.topSocket$) {
+      this.topSocket$ = webSocket<any>({
+        url: wsUrl(ENDPOINTS.leaderboard.baseWs, ENDPOINTS.leaderboard.wsTop),
+        deserializer: (event) => JSON.parse((event as MessageEvent).data)
+      });
+    }
+    return this.topSocket$.pipe(share());
+  }
+
+  streamAround(): Observable<any> {
+    if (!this.aroundSocket$) {
+      this.aroundSocket$ = webSocket<any>({
+        url: wsUrl(ENDPOINTS.leaderboard.baseWs, ENDPOINTS.leaderboard.wsAround),
+        deserializer: (event) => JSON.parse((event as MessageEvent).data)
+      });
+    }
+    return this.aroundSocket$.pipe(share());
   }
 }
