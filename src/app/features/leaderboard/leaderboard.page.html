@@ -33,41 +33,31 @@
               <span class="text-gray-200">Just now</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-400">Total Value</span>
-            <div class="text-white font-semibold">${{ ((portfolio.totalValue || 0) / 1000000).toFixed(2) }}M</div>
+              <span class="text-gray-400">Composite Score</span>
+              <div class="text-white font-semibold">{{ portfolio.compositeScore?.toFixed(2) || 'N/A' }}</div>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-400">Daily PnL</span>
-              <span [class]="(portfolio.dailyPnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'" class="font-semibold">
-                {{ (portfolio.dailyPnl || 0) >= 0 ? '+' : '' }}{{ (portfolio.dailyPnl || 0).toFixed(2) }}%
+              <span class="text-gray-400">Avg Return</span>
+              <span [class]="(portfolio.avgReturn || 0) >= 0 ? 'text-green-400' : 'text-red-400'" class="font-semibold">
+                {{ (portfolio.avgReturn || 0) >= 0 ? '+' : '' }}{{ (portfolio.avgReturn || 0).toFixed(2) }}%
               </span>
             </div>
-            <div class="flex justify-between">
-              <span class="text-gray-400">Stocks Held</span>
-              <span class="text-gray-200">{{ portfolio.stocks }}</span>
-            </div>
           </div>
         </div>
 
-        <!-- PnL Trend Chart -->
+        <!-- Sharpe Ratio Chart -->
         <div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
-          <h4 class="text-sm font-medium text-gray-400 mb-4">PnL Trend</h4>
+          <h4 class="text-sm font-medium text-gray-400 mb-4">Sharpe Ratio</h4>
           <div class="w-full h-40">
-            <canvas #trendCanvas></canvas>
+            <canvas #sharpeCanvas></canvas>
           </div>
         </div>
 
-        <!-- Sector Exposure -->
+        <!-- Sortino Ratio Chart -->
         <div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
-          <h4 class="text-sm font-medium text-gray-400 mb-4">Sector Exposure</h4>
-          <div class="flex justify-center mb-4 w-40 h-40 mx-auto">
-            <canvas #donutCanvas></canvas>
-          </div>
-          <div class="space-y-2">
-            <div *ngFor="let sector of portfolio.sectorExposure" class="flex justify-between text-sm">
-              <span class="text-gray-400">{{ sector.sector }}</span>
-              <span class="text-gray-200">{{ sector.percentage }}%</span>
-            </div>
+          <h4 class="text-sm font-medium text-gray-400 mb-4">Sortino Ratio</h4>
+          <div class="w-full h-40">
+            <canvas #sortinoCanvas></canvas>
           </div>
         </div>
       </ng-container>

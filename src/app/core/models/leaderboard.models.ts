@@ -19,6 +19,11 @@ export interface Portfolio {
   sharpe?: string;
   sortino?: string;
   updatedAt?: string;
+  // Chart data
+  sharpeHistory?: number[];
+  sortinoHistory?: number[];
+  overallSharpeHistory?: number[];
+  overallSortinoHistory?: number[];
   // Legacy fields for backward compatibility
   dailyPnl?: number;
   totalValue?: number;
