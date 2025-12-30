@@ -1,19 +1,37 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, asyncScheduler, catchError, map, of, throttleTime } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  Subject,
+  asyncScheduler,
+  catchError,
+  filter,
+  map,
+  of,
+  takeUntil,
+  throttleTime,
+} from 'rxjs';
 
 import { AnalyticsApiService } from '../services/analytics-api.service';
-import { AnalyticsWsHoldingsService } from '../services/analytics-ws-holdings.service';
-import { AnalyticsWsUnrealisedService } from '../services/analytics-ws-unrealised.service';
+import { AnalyticsStompService } from '../services/analytics-stomp.service';
 import { LeaderboardWsService } from '../services/leaderboard-ws.service';
 
-import { AnalysisEntityDto, SectorMetricsDto, UnrealisedPnlWsDto } from '../models/analytics.models';
+import {
+  AnalysisEntityDto,
+  SectorMetricsDto,
+  UnrealisedPnlWsDto,
+} from '../models/analytics.models';
 import { LeaderboardEntry } from '../models/leaderboard.models';
-import { DashboardKpis, MoversView, PortfolioOverviewRow, PnlTrendPoint, SectorExposure } from '../models/ui.models';
+import {
+  DashboardKpis,
+  MoversView,
+  PortfolioOverviewRow,
+  PnlTrendPoint,
+  SectorExposure,
+} from '../models/ui.models';
 
 interface PmsState {
-  // key: `${portfolioId}|${symbol}`
   positions: Record<string, AnalysisEntityDto>;
-  // key: portfolioId
   unrealised: Record<string, { overall: number; bySymbol: Record<string, number>; ts: string }>;
   sectors: SectorMetricsDto[];
   leaderboard: LeaderboardEntry[];
@@ -27,8 +45,11 @@ export class PmsStore {
     positions: {},
     unrealised: {},
     sectors: [],
-    leaderboard: []
+    leaderboard: [],
   });
+
+  // Do NOT complete this in a long-lived singleton store
+  private readonly destroy$ = new Subject<void>();
 
   private readonly pnlTrendSubject = new BehaviorSubject<PnlTrendPoint[]>([]);
   readonly pnlTrend$ = this.pnlTrendSubject.asObservable();
@@ -51,25 +72,37 @@ export class PmsStore {
 
   constructor(
     private readonly api: AnalyticsApiService,
-    private readonly positionsWs: AnalyticsWsHoldingsService,
-    private readonly unrealisedWs: AnalyticsWsUnrealisedService,
+    private readonly analyticsWs: AnalyticsStompService,
     private readonly leaderboardWs: LeaderboardWsService
   ) {}
 
-  // Call from dashboard init (so it reliably runs)
   init(): void {
     this.loadInitialData();
-    this.handlePositionSocket();
-    this.handleUnrealisedSocket();
+    this.handleAnalyticsStomp();
     this.handleLeaderboardSocket();
   }
 
+  destroy(): void {
+    // stop rx pipelines
+    this.destroy$.next();
+
+    // close STOMP/SockJS
+    this.analyticsWs.disconnect();
+
+    // if leaderboardWs has its own disconnect, call it too (depends on your implementation)
+    // this.leaderboardWs.disconnect?.();
+  }
+
   private loadInitialData(): void {
-    this.api.getAnalysisAll()
-      .pipe(catchError((e) => {
-        console.error('getAnalysisAll failed', e);
-        return of([] as AnalysisEntityDto[]);
-      }))
+    this.api
+      .getAnalysisAll()
+      .pipe(
+        catchError((e) => {
+          console.error('getAnalysisAll failed', e);
+          return of([] as AnalysisEntityDto[]);
+        }),
+        takeUntil(this.destroy$)
+      )
       .subscribe((positions) => {
         const map = positions.reduce<Record<string, AnalysisEntityDto>>((acc, p) => {
           const pid = p.id?.portfolioId;
@@ -81,39 +114,63 @@ export class PmsStore {
             ...p,
             holdings: Number(p.holdings ?? 0),
             totalInvested: Number(p.totalInvested ?? 0),
-            realizedPnl: Number(p.realizedPnl ?? 0)
+            realizedPnl: Number(p.realizedPnl ?? 0),
           };
           return acc;
         }, {});
         this.setState({ positions: map });
       });
 
-    this.api.getSectorOverall()
-      .pipe(catchError((e) => {
-        console.error('getSectorOverall failed', e);
-        return of([] as SectorMetricsDto[]);
-      }))
+    this.api
+      .getSectorOverall()
+      .pipe(
+        catchError((e) => {
+          console.error('getSectorOverall failed', e);
+          return of([] as SectorMetricsDto[]);
+        }),
+        takeUntil(this.destroy$)
+      )
       .subscribe((sectors) => this.setState({ sectors }));
+
+    this.api.getUnrealizedPnl().subscribe({
+      next: () => {
+        console.log('Request triggered successfully');
+      },
+      error: (err) => {
+        console.error('Failed to trigger unrealized PnL', err);
+      }
+    });
   }
 
-  private handlePositionSocket(): void {
-    this.positionsWs.stream()
-      .pipe(throttleTime(250, asyncScheduler, { leading: true, trailing: true }))
+  private handleAnalyticsStomp(): void {
+    this.analyticsWs.connect();
+
+    this.analyticsWs.positionUpdate$
+      .pipe(
+        filter((msg): msg is AnalysisEntityDto => msg !== null),
+        throttleTime(250, asyncScheduler, { leading: true, trailing: true }),
+        takeUntil(this.destroy$)
+      )
       .subscribe((msg) => this.upsertPosition(msg));
-  }
 
-  private handleUnrealisedSocket(): void {
-    this.unrealisedWs.stream()
+    this.analyticsWs.unrealised$
+      .pipe(
+        filter((msg): msg is UnrealisedPnlWsDto => msg !== null),
+        takeUntil(this.destroy$)
+      )
       .subscribe((msg) => this.upsertUnrealised(msg));
   }
 
   private handleLeaderboardSocket(): void {
-    // Keep it running even if not used on dashboard yet
-    this.leaderboardWs.stream()
-      .pipe(catchError((e) => {
-        console.error('leaderboard WS failed', e);
-        return of({ entries: [] } as any);
-      }))
+    this.leaderboardWs
+      .stream()
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((e) => {
+          console.error('leaderboard WS failed', e);
+          return of({ entries: [] } as any);
+        })
+      )
       .subscribe((snapshot: any) => this.setState({ leaderboard: snapshot.entries ?? [] }));
   }
 
@@ -126,7 +183,7 @@ export class PmsStore {
       ...position,
       holdings: Number(position.holdings ?? 0),
       totalInvested: Number(position.totalInvested ?? 0),
-      realizedPnl: Number(position.realizedPnl ?? 0)
+      realizedPnl: Number(position.realizedPnl ?? 0),
     };
 
     this.updateState((state) => {
@@ -164,13 +221,12 @@ export class PmsStore {
           totalInvestment: 0,
           unrealisedPnl: 0,
           realisedPnl: 0,
-          lastUpdatedLabel: '—'
+          lastUpdatedLabel: '—',
         });
       }
       return rows.get(portfolioId)!;
     };
 
-    // Aggregate positions (holdings/investment/realised)
     Object.values(state.positions).forEach((p) => {
       const pid = p.id?.portfolioId;
       if (!pid) return;
@@ -181,7 +237,6 @@ export class PmsStore {
       row.realisedPnl += Number(p.realizedPnl ?? 0);
     });
 
-    // Apply unrealised snapshot
     Object.entries(state.unrealised).forEach(([pid, u]) => {
       const row = ensureRow(pid);
       row.unrealisedPnl = Number(u.overall ?? 0);
@@ -217,16 +272,25 @@ export class PmsStore {
       .map(([symbol, pct]) => ({ symbol, pct }))
       .sort((a, b) => b.pct - a.pct);
 
-    const topGainers = all.filter(x => x.pct >= 0).slice(0, 5);
-    const topLosers = all.filter(x => x.pct < 0).sort((a, b) => a.pct - b.pct).slice(0, 5);
+    const topGainers = all.filter((x) => x.pct >= 0).slice(0, 5);
+    const topLosers = all
+      .filter((x) => x.pct < 0)
+      .sort((a, b) => a.pct - b.pct)
+      .slice(0, 5);
 
     return { topGainers, topLosers };
   }
 
-  private recordPnlTrend(unrealised: Record<string, { overall: number; bySymbol: Record<string, number>; ts: string }>): void {
+  private recordPnlTrend(
+    unrealised: Record<string, { overall: number; bySymbol: Record<string, number>; ts: string }>
+  ): void {
     const total = Object.values(unrealised).reduce((sum, u) => sum + Number(u.overall ?? 0), 0);
     const now = new Date();
-    const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const label = now.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
 
     const next = [...this.pnlTrendSubject.value, { label, value: total }];
     this.pnlTrendSubject.next(next.slice(-MAX_TREND_POINTS));
@@ -246,6 +310,8 @@ export class PmsStore {
 
   private formatTimestamp(ts: string): string {
     const d = new Date(ts);
-    return isNaN(d.getTime()) ? 'Live' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return isNaN(d.getTime())
+      ? 'Live'
+      : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 
@@ -8,7 +8,14 @@ import { MoversPanelComponent } from './components/movers-panel.component';
 import { SectorChartsComponent } from './components/sector-charts.component';
 
 import { PmsStore } from '../../core/state/pms.store';
-import { DashboardKpis, MoversView, PortfolioOverviewRow, PnlTrendPoint, SectorExposure } from '../../core/models/ui.models';
+// import { PmsMockStore as PmsStore } from '../../core/state/pms.mock-store'; // keep mock for now
+import {
+  DashboardKpis,
+  MoversView,
+  PortfolioOverviewRow,
+  PnlTrendPoint,
+  SectorExposure,
+} from '../../core/models/ui.models';
 import { MOCK_SECTOR_BREAKDOWN } from '../../core/mock/sector-breakdown.mock-data';
 import { SectorModalComponent, SectorSymbolRow } from './components/sector-modal/sector-modal';
 
@@ -21,12 +28,12 @@ import { SectorModalComponent, SectorSymbolRow } from './components/sector-modal
     PortfolioTableComponent,
     MoversPanelComponent,
     SectorChartsComponent,
-    SectorModalComponent
+    SectorModalComponent,
   ],
   templateUrl: './dashboard.page.html',
-  styleUrls: ['./dashboard.page.css']
+  styleUrls: ['./dashboard.page.css'],
 })
-export class DashboardPage implements OnInit {
+export class DashboardPage implements OnInit, OnDestroy {
   private readonly store = inject(PmsStore);
 
   readonly dashboardRows$: Observable<PortfolioOverviewRow[]> = this.store.dashboardRows$;
@@ -42,6 +49,10 @@ export class DashboardPage implements OnInit {
 
   ngOnInit(): void {
     this.store.init();
+  }
+
+  ngOnDestroy(): void {
+    this.store.destroy();
   }
 
   openSectorModal(sector: string) {

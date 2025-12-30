@@ -21,4 +21,10 @@ export class AnalyticsApiService {
       httpUrl(ENDPOINTS.analytics.baseHttp, ENDPOINTS.analytics.sectorOverall)
     );
   }
+
+  getUnrealizedPnl(): Observable<void> {
+    return this.http.get<void>(
+      httpUrl(ENDPOINTS.analytics.baseHttp, ENDPOINTS.analytics.initialUnrealizedPnl)
+    );
+  }
 }
