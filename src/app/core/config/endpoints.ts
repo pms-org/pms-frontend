@@ -1,18 +1,22 @@
 export const ENDPOINTS = {
   analytics: {
-    // use proxy in dev
-    // baseHttp: '/api/analytics',
+    // Backend IP
     baseHttp: 'http://18.118.149.115:8082',
 
-    // REST (RELATIVE to baseHttp)
-    analysisAll: '/api/analysis/all',                 // GET List<AnalysisEntityDto>
-    sectorOverall: '/api/sectors/overall',        // GET List<SectorMetricsDto>
+    // REST Data Endpoints
+    analysisAll: '/api/analysis/all',
+    sectorOverall: '/api/sectors/overall',
+    
+    // ✅ The Trigger Endpoint (Returns void, result comes via WS)
     initialUnrealizedPnl: '/api/unrealized',
 
-    // SockJS STOMP endpoint is relative (goes through proxy)
-    wsEndpoint: '/ws',
+    // Portfolio & Sector Specifics
+    portfolioSector: (id: string) => `/api/sectors/portfolio-wise/${id}`,
+    sectorDrilldown: (sector: string) => `/api/sectors/sector-wise/${sector}`,
+    portfolioSectorDrilldown: (id: string, sector: string) => `/api/sectors/portfolio-wise/${id}/sector-wise/${sector}`,
 
-    // STOMP topics
+    // WS
+    wsEndpoint: '/ws',
     topicPositions: '/topic/position-update',
     topicUnrealised: '/topic/unrealized-pnl',
   },

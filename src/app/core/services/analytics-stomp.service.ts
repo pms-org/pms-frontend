@@ -9,7 +9,10 @@ import { AnalysisEntityDto, UnrealisedPnlWsDto } from '../models/analytics.model
 @Injectable({ providedIn: 'root' })
 export class AnalyticsStompService {
   private client?: Client;
-  private connected = false;
+
+  // ✅ 1. Track Connection Status
+  private readonly connectedSubject = new BehaviorSubject<boolean>(false);
+  readonly connected$ = this.connectedSubject.asObservable();
 
   private readonly positionUpdateSubject = new BehaviorSubject<AnalysisEntityDto | null>(null);
   readonly positionUpdate$: Observable<AnalysisEntityDto | null> =
@@ -20,38 +23,49 @@ export class AnalyticsStompService {
     this.unrealisedSubject.asObservable();
 
   connect(): void {
-    if (this.connected) return;
+    if (this.connectedSubject.value) return; 
 
-    // IMPORTANT: use proxied relative path so Angular dev proxy forwards it to 18.118.149.115:8082
-    const sockJsUrl = ENDPOINTS.analytics.wsEndpoint; // should be "/ws"
+    const sockJsUrl = ENDPOINTS.analytics.wsEndpoint; 
 
     this.client = new Client({
-      // SockJS transport (required because backend uses withSockJS())
       webSocketFactory: () => new SockJS(sockJsUrl),
-
-      reconnectDelay: 3000,
+      reconnectDelay: 5000,
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,
-      debug: () => {}
+      debug: (str) => console.log('[STOMP]', str),
     });
 
     this.client.onConnect = () => {
-      this.connected = true;
+      console.log('✅ STOMP Connected');
+      this.connectedSubject.next(true);
 
+      // ✅ 2. Fix Array Parsing for Positions
       this.client?.subscribe(ENDPOINTS.analytics.topicPositions, (msg: IMessage) => {
-        const raw = JSON.parse(msg.body);
-        this.positionUpdateSubject.next(this.normalizePosition(raw));
+        try {
+          const raw = JSON.parse(msg.body);
+          if (Array.isArray(raw)) {
+            raw.forEach(item => this.positionUpdateSubject.next(this.normalizePosition(item)));
+          } else {
+            this.positionUpdateSubject.next(this.normalizePosition(raw));
+          }
+        } catch (e) {
+          console.error('Error parsing position update', e);
+        }
       });
 
       this.client?.subscribe(ENDPOINTS.analytics.topicUnrealised, (msg: IMessage) => {
-        const raw = JSON.parse(msg.body);
-        this.unrealisedSubject.next(this.normalizeUnrealised(raw));
+        try {
+          const raw = JSON.parse(msg.body);
+          this.unrealisedSubject.next(this.normalizeUnrealised(raw));
+        } catch (e) {
+          console.error('Error parsing unrealized pnl', e);
+        }
       });
     };
 
-    this.client.onWebSocketClose = () => { this.connected = false; };
-    this.client.onStompError = (frame) => {
-      console.error('STOMP broker error:', frame.headers['message'], frame.body);
+    this.client.onWebSocketClose = () => {
+      console.warn('⚠️ WebSocket Closed');
+      this.connectedSubject.next(false);
     };
 
     this.client.activate();
@@ -59,7 +73,7 @@ export class AnalyticsStompService {
 
   disconnect(): void {
     this.client?.deactivate();
-    this.connected = false;
+    this.connectedSubject.next(false);
   }
 
   private normalizePosition(raw: any): AnalysisEntityDto {
@@ -70,8 +84,8 @@ export class AnalyticsStompService {
       holdings: Number(raw?.holdings ?? 0),
       totalInvested: Number(raw?.totalInvested ?? raw?.total_invested ?? 0),
       realizedPnl: Number(raw?.realizedPnl ?? raw?.realisedPnl ?? raw?.realized_pnl ?? 0),
-      createdAt: raw?.createdAt ?? raw?.created_at,
-      updatedAt: raw?.updatedAt ?? raw?.updated_at
+      createdAt: raw?.createdAt,
+      updatedAt: raw?.updatedAt,
     };
   }
 
@@ -79,7 +93,7 @@ export class AnalyticsStompService {
     return {
       symbol: raw?.symbol ?? {},
       overallUnrealised_Pnl: Number(raw?.overallUnrealised_Pnl ?? raw?.overallUnrealisedPnl ?? 0),
-      portfolio_id: raw?.portfolio_id ?? raw?.portfolioId ?? ''
+      portfolio_id: raw?.portfolio_id ?? raw?.portfolioId ?? '',
     };
   }
 }

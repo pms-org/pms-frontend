@@ -1,5 +1,5 @@
 {
-  "/api/analysis": {
+  "/api": {
     "target": "http://18.118.149.115:8082",
     "secure": false,
     "changeOrigin": true,

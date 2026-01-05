@@ -3,13 +3,10 @@ import {
   BehaviorSubject,
   Observable,
   Subject,
-  asyncScheduler,
-  catchError,
   filter,
   map,
-  of,
+  take,
   takeUntil,
-  throttleTime,
 } from 'rxjs';
 
 import { AnalyticsApiService } from '../services/analytics-api.service';
@@ -29,6 +26,7 @@ import {
   PnlTrendPoint,
   SectorExposure,
 } from '../models/ui.models';
+import { PortfolioKpis } from '../models/portfolio-ui.models';
 
 interface PmsState {
   positions: Record<string, AnalysisEntityDto>;
@@ -38,7 +36,6 @@ interface PmsState {
 }
 
 const MAX_TREND_POINTS = 30;
-
 @Injectable({ providedIn: 'root' })
 export class PmsStore {
   private readonly state$ = new BehaviorSubject<PmsState>({
@@ -48,9 +45,7 @@ export class PmsStore {
     leaderboard: [],
   });
 
-  // Do NOT complete this in a long-lived singleton store
   private readonly destroy$ = new Subject<void>();
-
   private readonly pnlTrendSubject = new BehaviorSubject<PnlTrendPoint[]>([]);
   readonly pnlTrend$ = this.pnlTrendSubject.asObservable();
 
@@ -77,68 +72,77 @@ export class PmsStore {
   ) {}
 
   init(): void {
-    this.loadInitialData();
+    // 1. Connect WS
     this.handleAnalyticsStomp();
     this.handleLeaderboardSocket();
+
+    // 2. Load Static REST Data
+    this.loadStaticData();
+
+    // ✅ 3. WAIT for Socket, THEN Trigger PnL
+    this.analyticsWs.connected$
+      .pipe(
+        filter((connected) => connected === true),
+        take(1) // Execute only once per session init
+      )
+      .subscribe(() => {
+        console.log('🚀 Socket Ready: Triggering Initial PnL Calculation...');
+        this.api.triggerUnrealizedPnlCalc().subscribe({
+          next: () => console.log('✅ Trigger Sent'),
+          error: (e) => console.error('❌ Trigger Failed', e)
+        });
+      });
   }
 
   destroy(): void {
-    // stop rx pipelines
     this.destroy$.next();
-
-    // close STOMP/SockJS
     this.analyticsWs.disconnect();
-
-    // if leaderboardWs has its own disconnect, call it too (depends on your implementation)
-    // this.leaderboardWs.disconnect?.();
   }
 
-  private loadInitialData(): void {
-    this.api
-      .getAnalysisAll()
-      .pipe(
-        catchError((e) => {
-          console.error('getAnalysisAll failed', e);
-          return of([] as AnalysisEntityDto[]);
-        }),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((positions) => {
-        const map = positions.reduce<Record<string, AnalysisEntityDto>>((acc, p) => {
-          const pid = p.id?.portfolioId;
-          const sym = p.id?.symbol;
-          if (!pid || !sym) return acc;
+  // ✅ Selector for Portfolio Page (Real Data)
+  selectPortfolio(portfolioId: string): Observable<{
+    positions: AnalysisEntityDto[];
+    kpis: PortfolioKpis;
+  }> {
+    return this.state$.pipe(
+      map((state) => {
+        const positions = Object.values(state.positions).filter(
+          (p) => p.id?.portfolioId === portfolioId
+        );
 
-          const key = this.positionKey(pid, sym);
-          acc[key] = {
-            ...p,
-            holdings: Number(p.holdings ?? 0),
-            totalInvested: Number(p.totalInvested ?? 0),
-            realizedPnl: Number(p.realizedPnl ?? 0),
-          };
-          return acc;
-        }, {});
+        const totalInvestment = positions.reduce((sum, p) => sum + (p.totalInvested || 0), 0);
+        const realisedPnl = positions.reduce((sum, p) => sum + (p.realizedPnl || 0), 0);
+        
+        const uData = state.unrealised[portfolioId];
+        const unrealisedPnl = uData ? uData.overall : 0;
+
+        return {
+          positions,
+          kpis: {
+            portfolioId,
+            totalInvestment,
+            realisedPnl,
+            unrealisedPnl
+          }
+        };
+      })
+    );
+  }
+
+  private loadStaticData(): void {
+    this.api.getAnalysisAll().pipe(takeUntil(this.destroy$)).subscribe((positions) => {
+        const map: Record<string, AnalysisEntityDto> = {};
+        positions.forEach(p => {
+          if (p.id?.portfolioId && p.id?.symbol) {
+             const key = this.positionKey(p.id.portfolioId, p.id.symbol);
+             map[key] = p;
+          }
+        });
         this.setState({ positions: map });
-      });
+    });
 
-    this.api
-      .getSectorOverall()
-      .pipe(
-        catchError((e) => {
-          console.error('getSectorOverall failed', e);
-          return of([] as SectorMetricsDto[]);
-        }),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((sectors) => this.setState({ sectors }));
-
-    this.api.getUnrealizedPnl().subscribe({
-      next: () => {
-        console.log('Request triggered successfully');
-      },
-      error: (err) => {
-        console.error('Failed to trigger unrealized PnL', err);
-      }
+    this.api.getSectorOverall().pipe(takeUntil(this.destroy$)).subscribe((sectors) => {
+      this.setState({ sectors });
     });
   }
 
@@ -148,7 +152,6 @@ export class PmsStore {
     this.analyticsWs.positionUpdate$
       .pipe(
         filter((msg): msg is AnalysisEntityDto => msg !== null),
-        throttleTime(250, asyncScheduler, { leading: true, trailing: true }),
         takeUntil(this.destroy$)
       )
       .subscribe((msg) => this.upsertPosition(msg));
@@ -162,15 +165,8 @@ export class PmsStore {
   }
 
   private handleLeaderboardSocket(): void {
-    this.leaderboardWs
-      .stream()
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((e) => {
-          console.error('leaderboard WS failed', e);
-          return of({ entries: [] } as any);
-        })
-      )
+    this.leaderboardWs.stream()
+      .pipe(takeUntil(this.destroy$))
       .subscribe((snapshot: any) => this.setState({ leaderboard: snapshot.entries ?? [] }));
   }
 
@@ -179,16 +175,9 @@ export class PmsStore {
     const sym = position.id?.symbol;
     if (!pid || !sym) return;
 
-    const normalized: AnalysisEntityDto = {
-      ...position,
-      holdings: Number(position.holdings ?? 0),
-      totalInvested: Number(position.totalInvested ?? 0),
-      realizedPnl: Number(position.realizedPnl ?? 0),
-    };
-
     this.updateState((state) => {
       const positions = { ...state.positions };
-      positions[this.positionKey(pid, sym)] = normalized;
+      positions[this.positionKey(pid, sym)] = position;
       return { ...state, positions };
     });
   }
@@ -203,9 +192,8 @@ export class PmsStore {
 
     this.updateState((state) => {
       const unrealised = { ...state.unrealised, [pid]: { overall, bySymbol, ts } };
-      const nextState = { ...state, unrealised };
-      this.recordPnlTrend(unrealised);
-      return nextState;
+      this.recordPnlTrend(unrealised); 
+      return { ...state, unrealised };
     });
   }
 
@@ -273,10 +261,7 @@ export class PmsStore {
       .sort((a, b) => b.pct - a.pct);
 
     const topGainers = all.filter((x) => x.pct >= 0).slice(0, 5);
-    const topLosers = all
-      .filter((x) => x.pct < 0)
-      .sort((a, b) => a.pct - b.pct)
-      .slice(0, 5);
+    const topLosers = all.filter((x) => x.pct < 0).sort((a, b) => a.pct - b.pct).slice(0, 5);
 
     return { topGainers, topLosers };
   }
@@ -286,11 +271,7 @@ export class PmsStore {
   ): void {
     const total = Object.values(unrealised).reduce((sum, u) => sum + Number(u.overall ?? 0), 0);
     const now = new Date();
-    const label = now.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
+    const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
     const next = [...this.pnlTrendSubject.value, { label, value: total }];
     this.pnlTrendSubject.next(next.slice(-MAX_TREND_POINTS));
