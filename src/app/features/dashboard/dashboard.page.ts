@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 
 import { KpiCardsComponent } from './components/kpi-cards.component';
 import { PortfolioTableComponent } from './components/portfolio-table.component';
@@ -8,7 +8,8 @@ import { MoversPanelComponent } from './components/movers-panel.component';
 import { SectorChartsComponent } from './components/sector-charts.component';
 
 import { PmsStore } from '../../core/state/pms.store';
-// import { PmsMockStore as PmsStore } from '../../core/state/pms.mock-store'; // keep mock for now
+import { AnalyticsApiService } from '../../core/services/analytics-api.service'; // ✅ Import API Service
+
 import {
   DashboardKpis,
   MoversView,
@@ -16,7 +17,7 @@ import {
   PnlTrendPoint,
   SectorExposure,
 } from '../../core/models/ui.models';
-import { MOCK_SECTOR_BREAKDOWN } from '../../core/mock/sector-breakdown.mock-data';
+
 import { SectorModalComponent, SectorSymbolRow } from './components/sector-modal/sector-modal';
 
 @Component({
@@ -35,6 +36,7 @@ import { SectorModalComponent, SectorSymbolRow } from './components/sector-modal
 })
 export class DashboardPage implements OnInit, OnDestroy {
   private readonly store = inject(PmsStore);
+  private readonly api = inject(AnalyticsApiService); // ✅ Inject Service
 
   readonly dashboardRows$: Observable<PortfolioOverviewRow[]> = this.store.dashboardRows$;
   readonly kpis$: Observable<DashboardKpis> = this.store.kpis$;
@@ -47,18 +49,39 @@ export class DashboardPage implements OnInit, OnDestroy {
   selectedSector = '';
   sectorRows: SectorSymbolRow[] = [];
 
+  private modalSub?: Subscription;
+
   ngOnInit(): void {
     this.store.init();
   }
 
   ngOnDestroy(): void {
     this.store.destroy();
+    this.modalSub?.unsubscribe();
   }
 
   openSectorModal(sector: string) {
     this.selectedSector = sector;
-    this.sectorRows = MOCK_SECTOR_BREAKDOWN[sector] ?? [];
-    this.sectorModalOpen = true;
+    
+    // ✅ REAL API CALL (Replaces MOCK_SECTOR_BREAKDOWN)
+    this.modalSub = this.api.getSectorDrilldown(sector).subscribe({
+      next: (data) => {
+        // Map Backend DTO to UI Model
+        this.sectorRows = data.map((d) => ({
+          symbol: d.symbol,
+          percentage: d.percentage,
+          holdings: d.holdings,
+          totalInvested: d.totalInvested,
+          realisedPnl: d.realizedPnl, // Note spelling: Backend 'z' -> UI 's' if needed
+        }));
+        
+        this.sectorModalOpen = true;
+      },
+      error: (err) => {
+        console.error('Failed to load sector data', err);
+        // Optional: Handle error (e.g. show toast)
+      }
+    });
   }
 
   closeSectorModal() {

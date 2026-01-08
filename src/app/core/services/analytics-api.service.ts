@@ -4,11 +4,20 @@ import { Observable } from 'rxjs';
 import { AnalysisEntityDto, SectorMetricsDto, SymbolMetricsDto } from '../models/analytics.models';
 import { ENDPOINTS, httpUrl } from '../config/endpoints';
 
+// ✅ Interface needed for Chart 3
+export interface PortfolioValueHistoryDto {
+  id: string;
+  portfolioId: string;
+  date: string; 
+  portfolioValue: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class AnalyticsApiService {
   private readonly http = inject(HttpClient);
+  // Using empty string to force proxy usage
   private readonly baseUrl = ENDPOINTS.analytics.baseHttp; 
 
   getAnalysisAll(): Observable<AnalysisEntityDto[]> {
@@ -23,14 +32,11 @@ export class AnalyticsApiService {
     );
   }
 
-  // ✅ The Manual Trigger
   triggerUnrealizedPnlCalc(): Observable<void> {
     return this.http.get<void>(
       httpUrl(this.baseUrl, ENDPOINTS.analytics.initialUnrealizedPnl)
     );
   }
-
-  // --- Portfolio & Sector Drilldown ---
 
   getPortfolioSectorAnalysis(portfolioId: string): Observable<SectorMetricsDto[]> {
     return this.http.get<SectorMetricsDto[]>(
@@ -47,6 +53,13 @@ export class AnalyticsApiService {
   getPortfolioSectorDrilldown(portfolioId: string, sector: string): Observable<SymbolMetricsDto[]> {
     return this.http.get<SymbolMetricsDto[]>(
       httpUrl(this.baseUrl, ENDPOINTS.analytics.portfolioSectorDrilldown(portfolioId, sector))
+    );
+  }
+
+  // ✅ The Missing Method causing your error
+  getPortfolioHistory(portfolioId: string): Observable<PortfolioValueHistoryDto[]> {
+    return this.http.get<PortfolioValueHistoryDto[]>(
+      httpUrl(this.baseUrl, ENDPOINTS.analytics.portfolioHistory(portfolioId))
     );
   }
 }

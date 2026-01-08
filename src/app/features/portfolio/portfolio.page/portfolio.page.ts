@@ -1,10 +1,146 @@
+// import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+// import { CommonModule } from '@angular/common';
+// import { ActivatedRoute, Router } from '@angular/router';
+// import { Subscription } from 'rxjs';
+
+// import { PmsStore } from '../../../core/state/pms.store';
+// import { AnalyticsApiService } from '../../../core/services/analytics-api.service';
+// import { PortfolioKpis, PortfolioSymbolRow, PortfolioSectorSlice } from '../../../core/models/portfolio-ui.models';
+// import { PnlTrendPoint } from '../../../core/models/ui.models';
+// import { MoneyPipe } from '../../../shared/pipes/money.pipe';
+// import { PortfolioChartsComponent } from './components/portfolio-charts/portfolio-charts';
+// import { SectorModalComponent, SectorSymbolRow } from '../../dashboard/components/sector-modal/sector-modal';
+
+// @Component({
+//   selector: 'app-portfolio-page',
+//   standalone: true,
+//   imports: [CommonModule, MoneyPipe, PortfolioChartsComponent, SectorModalComponent],
+//   templateUrl: './portfolio.page.html'
+// })
+// export class PortfolioPage implements OnInit, OnDestroy {
+//   private readonly route = inject(ActivatedRoute);
+//   private readonly router = inject(Router);
+//   private readonly store = inject(PmsStore);
+//   private readonly api = inject(AnalyticsApiService);
+
+//   portfolioId = '';
+//   private sub = new Subscription();
+
+//   kpis: PortfolioKpis = { portfolioId: '', totalInvestment: 0, unrealisedPnl: 0, realisedPnl: 0 };
+//   rows: PortfolioSymbolRow[] = [];
+  
+//   // Charts Data
+//   sectors: PortfolioSectorSlice[] = [];
+//   livePnlTrend: PnlTrendPoint[] = []; // Chart 2: Live Socket Updates
+//   historyTrend: PnlTrendPoint[] = []; // Chart 3: 30-day History
+
+//   // Modal State
+//   sectorModalOpen = false;
+//   selectedSector = '';
+//   sectorRows: SectorSymbolRow[] = [];
+
+//   ngOnInit(): void {
+//     this.portfolioId = this.route.snapshot.paramMap.get('portfolioId') ?? '';
+//     if (!this.portfolioId) { this.back(); return; }
+
+//     // 1. Subscribe to Store (Live Positions & PnL)
+//     this.sub.add(
+//       this.store.selectPortfolio(this.portfolioId).subscribe((data) => {
+//         this.kpis = data.kpis;
+        
+//         // ✅ Update Live Trend Chart
+//         this.updateLiveTrend(data.unrealisedDetails.overall);
+
+//         // ✅ Map Rows with Per-Symbol PnL
+//         this.rows = data.positions.map(p => {
+//           const symbol = p.id.symbol;
+//           // Look up PnL in the bySymbol map, default to 0 if missing
+//           const pnl = data.unrealisedDetails.bySymbol[symbol] ?? 0;
+          
+//           return {
+//             symbol: symbol,
+//             holdings: p.holdings,
+//             totalInvestment: p.totalInvested,
+//             realisedPnl: p.realizedPnl,
+//             unrealisedPnl: pnl 
+//           };
+//         });
+//       })
+//     );
+
+//     // 2. Fetch Sector Composition
+//     this.sub.add(
+//       this.api.getPortfolioSectorAnalysis(this.portfolioId).subscribe({
+//         next: (sectors) => {
+//           this.sectors = sectors.map(s => ({ sector: s.sector, pct: s.percentage ?? 0 }));
+//         },
+//         error: (e) => console.error('Sector load failed', e)
+//       })
+//     );
+
+//     // 3. Fetch 30-Day History (Chart 3)
+//     this.sub.add(
+//       this.api.getPortfolioHistory(this.portfolioId).subscribe({
+//         next: (history) => {
+//           // Sort by date ascending for the chart
+//           this.historyTrend = history
+//             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+//             .map(h => ({
+//               label: h.date, // e.g. "2024-01-01"
+//               value: h.portfolioValue
+//             }));
+//         },
+//         error: (e) => console.error('History load failed', e)
+//       })
+//     );
+//   }
+
+//   ngOnDestroy(): void {
+//     this.sub.unsubscribe();
+//   }
+
+//   // ✅ Accumulates live socket points for the "Minute Way" chart
+//   private updateLiveTrend(currentValue: number) {
+//     const now = new Date();
+//     const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    
+//     // Add new point
+//     const newPoint = { label, value: currentValue };
+    
+//     // Keep last 20 points so the chart moves
+//     this.livePnlTrend = [...this.livePnlTrend, newPoint].slice(-20); 
+//   }
+
+//   back(): void { this.router.navigate(['/dashboard']); }
+
+//   openSectorModal(sector: string): void {
+//     this.selectedSector = sector;
+//     this.api.getPortfolioSectorDrilldown(this.portfolioId, sector).subscribe(data => {
+//       this.sectorRows = data.map(d => ({
+//         symbol: d.symbol,
+//         percentage: d.percentage ?? 0,
+//         holdings: d.holdings,
+//         totalInvested: d.totalInvested,
+//         realisedPnl: d.realizedPnl
+//       }));
+//       this.sectorModalOpen = true;
+//     });
+//   }
+  
+//   closeSectorModal(): void { this.sectorModalOpen = false; }
+// }
+
+
+
+
+
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 import { PmsStore } from '../../../core/state/pms.store';
-import { AnalyticsApiService } from '../../../core/services/analytics-api.service';
+import { AnalyticsApiService, PortfolioValueHistoryDto } from '../../../core/services/analytics-api.service';
 import { PortfolioKpis, PortfolioSymbolRow, PortfolioSectorSlice } from '../../../core/models/portfolio-ui.models';
 import { PnlTrendPoint } from '../../../core/models/ui.models';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
@@ -26,51 +162,66 @@ export class PortfolioPage implements OnInit, OnDestroy {
   portfolioId = '';
   private sub = new Subscription();
 
-  // Data for View
   kpis: PortfolioKpis = { portfolioId: '', totalInvestment: 0, unrealisedPnl: 0, realisedPnl: 0 };
   rows: PortfolioSymbolRow[] = [];
+  
   sectors: PortfolioSectorSlice[] = [];
-  trend: PnlTrendPoint[] = []; // Empty for now as requested
+  livePnlTrend: PnlTrendPoint[] = []; 
+  historyTrend: PnlTrendPoint[] = [];
 
-  // Modal State
   sectorModalOpen = false;
   selectedSector = '';
   sectorRows: SectorSymbolRow[] = [];
 
   ngOnInit(): void {
     this.portfolioId = this.route.snapshot.paramMap.get('portfolioId') ?? '';
+    if (!this.portfolioId) { this.back(); return; }
 
-    if (!this.portfolioId) {
-      this.back();
-      return;
-    }
-
-    // 1. Subscribe to Store for Live Positions & KPIs (Real Data)
+    // 1. Live Data from Store
     this.sub.add(
       this.store.selectPortfolio(this.portfolioId).subscribe((data) => {
         this.kpis = data.kpis;
         
-        // Map Store Entities to UI Rows
-        this.rows = data.positions.map(p => ({
-          symbol: p.id.symbol,
-          holdings: p.holdings,
-          totalInvestment: p.totalInvested,
-          realisedPnl: p.realizedPnl,
-          unrealisedPnl: 0 // Will connect when per-symbol PnL is available in store
-        }));
+        // Update Chart 2
+        this.updateLiveTrend(data.unrealisedDetails.overall);
+
+        // Update Table with per-symbol PnL
+        this.rows = data.positions.map(p => {
+          const symbol = p.id.symbol;
+          const pnl = data.unrealisedDetails.bySymbol[symbol] ?? 0;
+          return {
+            symbol: symbol,
+            holdings: p.holdings,
+            totalInvestment: p.totalInvested,
+            realisedPnl: p.realizedPnl,
+            unrealisedPnl: pnl 
+          };
+        });
       })
     );
 
-    // 2. Fetch Sector Breakdown (API)
+    // 2. Sector Composition
     this.sub.add(
       this.api.getPortfolioSectorAnalysis(this.portfolioId).subscribe({
         next: (sectors) => {
-          this.sectors = sectors.map(s => ({
-            sector: s.sector,
-            pct: s.percentage ?? 0
-          }));
+          this.sectors = sectors.map(s => ({ sector: s.sector, pct: s.percentage ?? 0 }));
         },
-        error: (e) => console.error('Sector load failed', e)
+        error: (e: any) => console.error('Sector load failed', e)
+      })
+    );
+
+    // 3. History (Matches new backend path)
+    this.sub.add(
+      this.api.getPortfolioHistory(this.portfolioId).subscribe({
+        next: (history: PortfolioValueHistoryDto[]) => {
+          this.historyTrend = history
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            .map(h => ({
+              label: h.date,
+              value: h.portfolioValue
+            }));
+        },
+        error: (e: any) => console.error('History load failed', e)
       })
     );
   }
@@ -79,14 +230,17 @@ export class PortfolioPage implements OnInit, OnDestroy {
     this.sub.unsubscribe();
   }
 
-  back(): void {
-    this.router.navigate(['/dashboard']);
+  private updateLiveTrend(currentValue: number) {
+    const now = new Date();
+    const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const newPoint = { label, value: currentValue };
+    this.livePnlTrend = [...this.livePnlTrend, newPoint].slice(-20); 
   }
+
+  back(): void { this.router.navigate(['/dashboard']); }
 
   openSectorModal(sector: string): void {
     this.selectedSector = sector;
-    
-    // Fetch detailed breakdown from API
     this.api.getPortfolioSectorDrilldown(this.portfolioId, sector).subscribe(data => {
       this.sectorRows = data.map(d => ({
         symbol: d.symbol,
@@ -99,7 +253,5 @@ export class PortfolioPage implements OnInit, OnDestroy {
     });
   }
   
-  closeSectorModal(): void {
-    this.sectorModalOpen = false;
-  }
+  closeSectorModal(): void { this.sectorModalOpen = false; }
 }

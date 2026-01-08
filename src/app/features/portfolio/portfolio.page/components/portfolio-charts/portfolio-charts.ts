@@ -3,8 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { PortfolioSectorSlice } from '../../../../../core/models/portfolio-ui.models';
 import { PnlTrendPoint } from '../../../../../core/models/ui.models';
+// import { PortfolioSectorSlice } from '../../../../../../core/models/portfolio-ui.models';
+// import { PnlTrendPoint } from '../../../../../../core/models/ui.models';
 
 Chart.register(...registerables);
+
 @Component({
   selector: 'app-portfolio-charts',
   standalone: true,
@@ -13,93 +16,87 @@ Chart.register(...registerables);
 })
 export class PortfolioChartsComponent implements AfterViewInit, OnDestroy {
   sectors = input<PortfolioSectorSlice[]>([]);
-  pnlTrend = input<PnlTrendPoint[]>([]);
+  liveTrend = input<PnlTrendPoint[]>([]); // Chart 2
+  historyTrend = input<PnlTrendPoint[]>([]); // Chart 3
 
-  // ✅ NEW: emit sector name on donut click
   sectorClicked = output<string>();
 
   @ViewChild('donutCanvas') donutCanvas!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('lineCanvas') lineCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('liveCanvas') liveCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('historyCanvas') historyCanvas!: ElementRef<HTMLCanvasElement>;
 
   private donut?: Chart;
-  private line?: Chart;
+  private liveChart?: Chart;
+  private historyChart?: Chart;
   private ready = false;
 
   constructor() {
     effect(() => this.syncDonut(this.sectors()));
-    effect(() => this.syncLine(this.pnlTrend()));
+    effect(() => this.syncLiveChart(this.liveTrend()));
+    effect(() => this.syncHistoryChart(this.historyTrend()));
   }
 
   ngAfterViewInit(): void {
     this.ready = true;
     this.syncDonut(this.sectors());
-    this.syncLine(this.pnlTrend());
+    this.syncLiveChart(this.liveTrend());
+    this.syncHistoryChart(this.historyTrend());
   }
 
   ngOnDestroy(): void {
     this.donut?.destroy();
-    this.line?.destroy();
+    this.liveChart?.destroy();
+    this.historyChart?.destroy();
   }
 
+  // --- Chart 1: Donut ---
   private syncDonut(sectors: PortfolioSectorSlice[]) {
-    if (!this.ready) return;
-
+    if (!this.ready || !this.donutCanvas) return;
     if (!this.donut) {
-      const cfg: ChartConfiguration<'doughnut'> = {
+      this.donut = new Chart(this.donutCanvas.nativeElement, {
         type: 'doughnut',
-        data: {
-          labels: sectors.map(s => s.sector),
-          datasets: [{ data: sectors.map(s => s.pct), borderWidth: 0 }]
-        },
+        data: { labels: [], datasets: [{ data: [], borderWidth: 0 }] },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
+          responsive: true, maintainAspectRatio: false,
           plugins: { legend: { display: false } },
-
-          // ✅ pointer cursor on hover
-          onHover: (evt, elements) => {
-            const canvas = (evt?.native?.target as HTMLCanvasElement) ?? this.donutCanvas?.nativeElement;
-            if (!canvas) return;
-            canvas.style.cursor = elements?.length ? 'pointer' : 'default';
-          },
-
-          // ✅ open modal on click
-          onClick: (_evt, elements) => {
-            if (!elements?.length) return;
-            const idx = elements[0].index;
-            const sector = (this.donut?.data.labels?.[idx] as string) ?? '';
-            if (sector) this.sectorClicked.emit(sector);
+          onClick: (_evt, els) => {
+            if (els.length) this.sectorClicked.emit(this.donut?.data.labels?.[els[0].index] as string);
           }
         }
-      };
-
-      this.donut = new Chart(this.donutCanvas.nativeElement, cfg);
-      return;
+      });
     }
-
     this.donut.data.labels = sectors.map(s => s.sector);
-    (this.donut.data.datasets[0].data as number[]) = sectors.map(s => s.pct);
+    this.donut.data.datasets[0].data = sectors.map(s => s.pct);
     this.donut.update();
   }
 
-  private syncLine(trend: PnlTrendPoint[]) {
-    if (!this.ready) return;
-
-    if (!this.line) {
-      const cfg: ChartConfiguration<'line'> = {
+  // --- Chart 2: Live PnL Trend ---
+  private syncLiveChart(trend: PnlTrendPoint[]) {
+    if (!this.ready || !this.liveCanvas) return;
+    if (!this.liveChart) {
+      this.liveChart = new Chart(this.liveCanvas.nativeElement, {
         type: 'line',
-        data: {
-          labels: trend.map(t => t.label),
-          datasets: [{ label: 'PnL', data: trend.map(t => t.value), borderWidth: 2, tension: 0.35, fill: false }]
-        },
+        data: { labels: [], datasets: [{ label: 'Real-Time PnL', data: [], borderColor: '#10b981', tension: 0.4 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-      };
-      this.line = new Chart(this.lineCanvas.nativeElement, cfg);
-      return;
+      });
     }
+    this.liveChart.data.labels = trend.map(t => t.label);
+    this.liveChart.data.datasets[0].data = trend.map(t => t.value);
+    this.liveChart.update('none'); // 'none' for smoother animation
+  }
 
-    this.line.data.labels = trend.map(t => t.label);
-    (this.line.data.datasets[0].data as number[]) = trend.map(t => t.value);
-    this.line.update();
+  // --- Chart 3: 30-Day History ---
+  private syncHistoryChart(trend: PnlTrendPoint[]) {
+    if (!this.ready || !this.historyCanvas) return;
+    if (!this.historyChart) {
+      this.historyChart = new Chart(this.historyCanvas.nativeElement, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Portfolio Value', data: [], borderColor: '#3b82f6', fill: true, backgroundColor: 'rgba(59,130,246,0.1)' }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+    }
+    this.historyChart.data.labels = trend.map(t => t.label);
+    this.historyChart.data.datasets[0].data = trend.map(t => t.value);
+    this.historyChart.update();
   }
 }

@@ -1,17 +1,18 @@
 export const ENDPOINTS = {
   analytics: {
     // Backend IP
-    baseHttp: 'http://18.118.149.115:8082',
+    // baseHttp: 'http://18.118.149.115:8082',
+    baseHttp: '',
 
     // REST Data Endpoints
     analysisAll: '/api/analysis/all',
     sectorOverall: '/api/sectors/overall',
-    
     // ✅ The Trigger Endpoint (Returns void, result comes via WS)
     initialUnrealizedPnl: '/api/unrealized',
 
     // Portfolio & Sector Specifics
     portfolioSector: (id: string) => `/api/sectors/portfolio-wise/${id}`,
+    portfolioHistory: (id: string) => `/api/portfolio_value/history/${id}`,
     sectorDrilldown: (sector: string) => `/api/sectors/sector-wise/${sector}`,
     portfolioSectorDrilldown: (id: string, sector: string) => `/api/sectors/portfolio-wise/${id}/sector-wise/${sector}`,
 
