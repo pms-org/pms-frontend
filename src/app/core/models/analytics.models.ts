@@ -25,3 +25,12 @@ export interface UnrealisedPnlWsDto {
   overallUnrealised_Pnl: number;           // note underscore
   portfolio_id: string;                    // note underscore
 }
+
+// Add this to your existing analytics.models.ts
+export interface SymbolMetricsDto {
+  symbol: string;
+  percentage: number;
+  holdings: number;
+  totalInvested: number;
+  realizedPnl: number;
+}
