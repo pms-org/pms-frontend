@@ -1,6 +1,6 @@
 export const ENDPOINTS = {
   analytics: {
-    baseHttp: 'http://localhost:8082',
+    baseHttp: '',
     baseWs: 'ws://localhost:8082',
 
     // REST
@@ -13,7 +13,7 @@ export const ENDPOINTS = {
   },
 
   leaderboard: {
-    baseHttp: 'http://localhost:8000',
+    baseHttp: '',
     baseWs: 'ws://localhost:8000',
 
     // REST
@@ -28,8 +28,8 @@ export const ENDPOINTS = {
   },
 
   rttm: {
-    baseHttp: 'http://localhost:8084',
-    baseWs: 'ws://localhost:8084',
+    baseHttp: '',
+    baseWs: 'ws://localhost:8085',
 
     // REST
     metrics: '/api/rttm/metrics',        // GET MetricCard[]

@@ -18,6 +18,11 @@ export interface Alert {
   timeAgo: string;
 }
 
+export interface DLQResponse {
+  total: number;
+  byStage: { [stage: string]: number };
+}
+
 export interface DLQError {
   stage: string;
   count: number;

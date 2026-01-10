@@ -1,6 +1,18 @@
 {
-  "/api/*": {
+  "/api/rttm/*": {
+    "target": "http://localhost:8085",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/api/leaderboard/*": {
     "target": "http://localhost:8000",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/api/analytics/*": {
+    "target": "http://localhost:8082",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
