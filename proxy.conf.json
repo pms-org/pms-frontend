@@ -11,7 +11,7 @@
     "changeOrigin": true,
     "ws": true,
     "logLevel": "debug",
-    "timeout": 60000, 
+    "timeout": 60000,
     "proxyTimeout": 60000
   }
 }
