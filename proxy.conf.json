@@ -1,17 +1,20 @@
 {
-  "/api": {
-    "target": "http://18.118.149.115:8082",
+  "/api/rttm/*": {
+    "target": "http://localhost:8085",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
   },
-  "/ws": {
-    "target": "http://18.118.149.115:8082",
+  "/api/leaderboard/*": {
+    "target": "http://localhost:8000",
     "secure": false,
     "changeOrigin": true,
-    "ws": true,
-    "logLevel": "debug",
-    "timeout": 60000, 
-    "proxyTimeout": 60000
+    "logLevel": "debug"
+  },
+  "/api/analytics/*": {
+    "target": "http://localhost:8082",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
   }
 }

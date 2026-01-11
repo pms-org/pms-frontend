@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { MetricCard, PipelineStage, DLQError } from '../models/rttm.models';
+import { MetricCard, PipelineStage, DLQResponse } from '../models/rttm.models';
 import { ENDPOINTS, httpUrl } from '../config/endpoints';
 
 @Injectable({
@@ -22,8 +22,8 @@ export class RttmApiService {
     );
   }
 
-  getDlq(): Observable<{ total: number; lastError: string; errors: DLQError[] }> {
-    return this.http.get<{ total: number; lastError: string; errors: DLQError[] }>(
+  getDlq(): Observable<DLQResponse> {
+    return this.http.get<DLQResponse>(
       httpUrl(ENDPOINTS.rttm.baseHttp, ENDPOINTS.rttm.dlq)
     );
   }

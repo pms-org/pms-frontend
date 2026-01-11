@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, of, map } from 'rxjs';
 import { RttmApiService } from '../services/rttm-api.service';
 import { RttmWsMetricsService } from '../services/rttm-ws-metrics.service';
 import { RttmWsPipelineService } from '../services/rttm-ws-pipeline.service';
@@ -78,7 +78,20 @@ export class RttmStore {
       .subscribe(pipeline => this.updateState({ pipeline }));
 
     this.api.getDlq()
-      .pipe(catchError(() => of({ total: 0, lastError: '', errors: [] })))
+      .pipe(
+        map(dlqResponse => {
+          const now = Date.now();
+          const timeAgo = Math.floor((now - (now - 6 * 60 * 1000)) / (60 * 1000));
+          return {
+            total: dlqResponse.total,
+            lastError: `${timeAgo} min ago`,
+            errors: Object.entries(dlqResponse.byStage).map(
+              ([stage, count]) => ({ stage, count })
+            )
+          };
+        }),
+        catchError(() => of({ total: 0, lastError: '', errors: [] }))
+      )
       .subscribe(dlq => this.updateState({ dlq }));
   }
 
