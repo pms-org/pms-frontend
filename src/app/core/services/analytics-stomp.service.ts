@@ -119,7 +119,6 @@ export class AnalyticsStompService {
   private readonly positionUpdateSubject = new BehaviorSubject<AnalysisEntityDto | null>(null);
   readonly positionUpdate$ = this.positionUpdateSubject.asObservable();
 
-  // ✅ Changed to Array to handle list from backend
   private readonly unrealisedSubject = new BehaviorSubject<UnrealisedPnlWsDto[]>([]);
   readonly unrealised$ = this.unrealisedSubject.asObservable();
 
@@ -133,14 +132,13 @@ export class AnalyticsStompService {
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,
-      debug: (str) => console.log('[STOMP]', str),
+      debug: (str: string) => console.log('[STOMP]', str),
     });
 
     this.client.onConnect = () => {
       console.log('✅ STOMP Connected');
       this.connectedSubject.next(true);
 
-      // Positions
       this.client?.subscribe(ENDPOINTS.analytics.topicPositions, (msg: IMessage) => {
         try {
           const raw = JSON.parse(msg.body);
@@ -154,16 +152,13 @@ export class AnalyticsStompService {
         }
       });
 
-      // ✅ Unrealized PnL (Handles List)
       this.client?.subscribe(ENDPOINTS.analytics.topicUnrealised, (msg: IMessage) => {
         try {
           const raw = JSON.parse(msg.body);
           if (Array.isArray(raw)) {
-            // Map the whole list
             const normalized = raw.map(item => this.normalizeUnrealised(item));
             this.unrealisedSubject.next(normalized);
           } else {
-            // Fallback for single object
             this.unrealisedSubject.next([this.normalizeUnrealised(raw)]);
           }
         } catch (e) {
