@@ -1,0 +1,14 @@
+/* Force horizontal layout for charts */
+.portfolio-charts-container {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 1.5rem !important;
+  width: 100% !important;
+  flex-wrap: nowrap !important;
+}
+
+.portfolio-charts-container > * {
+  flex: 1 !important;
+  min-width: 300px !important;
+  max-width: none !important;
+}

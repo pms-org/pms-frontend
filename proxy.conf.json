@@ -1,4 +1,10 @@
 {
+  "/api/analytics": {
+    "target": "http://18.118.149.115:8082",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
   "/api/analysis": {
     "target": "http://18.118.149.115:8082",
     "secure": false,

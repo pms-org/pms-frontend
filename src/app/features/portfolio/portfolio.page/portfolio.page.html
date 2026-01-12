@@ -115,20 +115,18 @@
   </div>
 
   <!-- Charts: Donut + Line -->
-  <!-- <div class="mt-6">
-    <app-portfolio-charts
-      [sectors]="sectors"
-      [pnlTrend]="trend"
-      (sectorClicked)="openSectorModal($event)"
-    ></app-portfolio-charts>
-  </div> -->
-  <div class="mt-6">
-    <app-portfolio-charts
-      [sectors]="sectors"
-      [liveTrend]="livePnlTrend"
-      [historyTrend]="historyTrend"
-      (sectorClicked)="openSectorModal($event)"
-    ></app-portfolio-charts>
+  <div class="mt-6 bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+    <div class="p-6 border-b border-gray-800">
+      <h2 class="text-xl font-semibold text-white">Portfolio Analytics</h2>
+    </div>
+    <div class="p-6 portfolio-charts-container">
+      <app-portfolio-charts
+        [sectors]="sectors"
+        [liveTrend]="livePnlTrend"
+        [historyTrend]="historyTrend"
+        (sectorClicked)="openSectorModal($event)"
+      ></app-portfolio-charts>
+    </div>
   </div>
 
   <!-- ✅ Modal: sector drilldown (portfolio specific) -->

@@ -5,8 +5,13 @@ export const ENDPOINTS = {
     baseWs: 'ws://18.118.149.115:8082',
 
     // REST
-    analysisAll: '/api/analytics/analysis',            // GET List<AnalysisEntityDto>
-    sectorOverall: '/api/analytics/sectors/overall',  // GET List<SectorMetricsDto>
+    analysisAll: '/api/analysis/all',
+    sectorOverall: '/api/sectors/overall',
+    initialUnrealizedPnl: '/api/analytics/initial-unrealized-pnl',
+    portfolioSector: (portfolioId: string) => `/api/sectors/portfolio-wise/${portfolioId}`,
+    sectorDrilldown: (sector: string) => `/api/analytics/sectors/${sector}/drilldown`,
+    portfolioSectorDrilldown: (portfolioId: string, sector: string) => `/api/analytics/portfolio/${portfolioId}/sectors/${sector}/drilldown`,
+    portfolioHistory: (portfolioId: string) => `/api/portfolio_value/history/${portfolioId}`,
 
     // WS
     wsEndpoint: '/ws',
@@ -15,8 +20,8 @@ export const ENDPOINTS = {
   },
 
   leaderboard: {
-    baseHttp: 'http://localhost:4200',
-    baseWs: 'ws://localhost:4200',
+    baseHttp: 'http://localhost:8000',
+    baseWs: 'ws://localhost:8000',
 
     // REST
     portfolios: '/api/leaderboard/portfolios', // GET List<Portfolio>
@@ -30,8 +35,8 @@ export const ENDPOINTS = {
   },
 
   rttm: {
-    baseHttp: 'http://localhost:4200',
-    baseWs: 'ws://localhost:4200',
+    baseHttp: 'http://18.118.149.115:8081',
+    baseWs: 'ws://18.118.149.115:8081',
 
     // REST
     metrics: '/api/rttm/metrics', // GET MetricCard[]

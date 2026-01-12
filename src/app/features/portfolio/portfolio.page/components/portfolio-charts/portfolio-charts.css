@@ -1,22 +1,29 @@
 .charts-row {
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
   gap: 1.5rem;
   width: 100%;
+  min-height: 400px;
+  flex-wrap: nowrap !important;
 }
 
 .chart-card {
-  flex: 1;
-  min-width: 0;
-  background: rgb(75 85 99);
-  border: 1px solid rgb(107 114 128);
+  flex: 1 1 33.333% !important;
+  min-width: 300px;
+  max-width: none;
+  background: rgb(17 24 39);
+  border: 1px solid rgb(31 41 55);
   border-radius: 0.5rem;
   padding: 1.5rem;
   transition: all 0.2s ease;
+  min-height: 350px;
+  display: flex;
+  flex-direction: column;
 }
 
 .chart-card:hover {
-  background: rgb(107 114 128);
-  border-color: rgb(156 163 175);
+  background: rgb(31 41 55);
+  border-color: rgb(75 85 99);
 }
 
 .chart-title {
@@ -26,6 +33,7 @@
   color: rgb(255 255 255);
   border-bottom: 1px solid rgb(31 41 55);
   padding-bottom: 0.5rem;
+  flex-shrink: 0;
 }
 
 .chart-inner {
@@ -33,11 +41,19 @@
   padding: 1rem;
   border-radius: 0.5rem;
   border: 1px solid rgb(31 41 55 / 0.5);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 240px; /* Fixed height instead of min-height */
+  width: 100%;
 }
 
 .chart-canvas {
   width: 100% !important;
-  height: 240px !important;
+  height: 100% !important; /* Use 100% to fill container */
+  max-height: 240px !important;
   display: block !important;
   border-radius: 0.25rem;
   position: relative;
@@ -70,15 +86,22 @@
 
 @media (max-width: 768px) {
   .charts-row {
-    flex-direction: column;
-    gap: 1rem;
+    flex-direction: row;
+    gap: 0.75rem;
+    overflow-x: auto;
   }
   
   .chart-card {
     padding: 1rem;
+    min-width: 280px;
+    flex-shrink: 0;
+  }
+  
+  .chart-inner {
+    height: 180px; /* Smaller height on mobile */
   }
   
   .chart-canvas {
-    height: 200px !important;
+    max-height: 180px !important;
   }
 }

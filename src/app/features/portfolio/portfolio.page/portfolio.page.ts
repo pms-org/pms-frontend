@@ -151,7 +151,8 @@ import { SectorModalComponent, SectorSymbolRow } from '../../dashboard/component
   selector: 'app-portfolio-page',
   standalone: true,
   imports: [CommonModule, MoneyPipe, PortfolioChartsComponent, SectorModalComponent],
-  templateUrl: './portfolio.page.html'
+  templateUrl: './portfolio.page.html',
+  styleUrl: './portfolio.page.css'
 })
 export class PortfolioPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
@@ -216,10 +217,8 @@ export class PortfolioPage implements OnInit, OnDestroy {
       this.api.getPortfolioSectorAnalysis(this.portfolioId).subscribe({
         next: (sectors) => {
           console.log('✅ Sector API Response:', sectors);
-          this.sectors = [...sectors.map(s => ({ sector: s.sector, pct: s.percentage ?? 0 }))];
+          this.sectors = sectors.map(s => ({ sector: s.sector, pct: s.percentage ?? 0 }));
           console.log('📊 Processed sectors for chart:', this.sectors);
-          // Trigger chart update after data is set
-          setTimeout(() => this.chartsComponent?.forceChartUpdate(), 100);
         },
         error: (e: any) => console.error('❌ Sector load failed', e)
       })
@@ -247,8 +246,6 @@ export class PortfolioPage implements OnInit, OnDestroy {
               value: h.portfolioValue
             }));
           console.log('📊 Processed history for chart:', this.historyTrend.length, 'points');
-          // Trigger chart update after data is set
-          setTimeout(() => this.chartsComponent?.forceChartUpdate(), 100);
         },
         error: (e: any) => console.error('❌ History load failed', e)
       })
