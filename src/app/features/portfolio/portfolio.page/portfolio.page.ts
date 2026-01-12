@@ -219,6 +219,16 @@ export class PortfolioPage implements OnInit, OnDestroy {
           console.log('✅ Sector API Response:', sectors);
           this.sectors = sectors.map(s => ({ sector: s.sector, pct: s.percentage ?? 0 }));
           console.log('📊 Processed sectors for chart:', this.sectors);
+          
+          // Force chart update after data is set
+          setTimeout(() => {
+            console.log('🔄 Triggering chart update with sectors:', this.sectors);
+            if (this.chartsComponent) {
+              // Directly set the data on the component
+              this.chartsComponent.sectors = this.sectors;
+              this.chartsComponent.forceChartUpdate();
+            }
+          }, 50);
         },
         error: (e: any) => console.error('❌ Sector load failed', e)
       })
@@ -246,6 +256,14 @@ export class PortfolioPage implements OnInit, OnDestroy {
               value: h.portfolioValue
             }));
           console.log('📊 Processed history for chart:', this.historyTrend.length, 'points');
+          
+          // Force history chart update
+          setTimeout(() => {
+            if (this.chartsComponent) {
+              this.chartsComponent.historyTrend = this.historyTrend;
+              this.chartsComponent.forceChartUpdate();
+            }
+          }, 50);
         },
         error: (e: any) => console.error('❌ History load failed', e)
       })

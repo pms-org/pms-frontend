@@ -32,14 +32,29 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
   private chartsInitialized = { donut: false, live: false, history: false };
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['sectors'] && this.sectors?.length > 0) {
-      console.log('🍩 Sectors changed:', this.sectors);
-      this.initializeChartIfReady('donut');
+    console.log('🔄 ngOnChanges triggered:', changes);
+    
+    if (changes['sectors']) {
+      console.log('🍩 Sectors input changed:', {
+        currentValue: changes['sectors'].currentValue,
+        previousValue: changes['sectors'].previousValue,
+        sectorsLength: this.sectors?.length || 0
+      });
+      if (this.sectors?.length > 0) {
+        console.log('📊 Chart initialization state:', {
+          viewReady: this.viewReady,
+          chartsInitialized: this.chartsInitialized.donut,
+          canvasExists: !!this.sectorCanvasRef?.nativeElement
+        });
+        this.initializeChartIfReady('donut');
+      }
     }
+    
     if (changes['liveTrend'] && this.liveTrend?.length > 0) {
       console.log('📈 Live trend changed:', this.liveTrend.length, 'points');
       this.initializeChartIfReady('live');
     }
+    
     if (changes['historyTrend'] && this.historyTrend?.length > 0) {
       console.log('📉 History trend changed:', this.historyTrend.length, 'points');
       this.initializeChartIfReady('history');
@@ -48,28 +63,54 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
 
   ngAfterViewInit(): void {
     this.viewReady = true;
+    console.log('🔧 View initialized, sectors available:', this.sectors?.length || 0);
     // Try to initialize any charts that have data ready
     this.initializeChartIfReady('donut');
     this.initializeChartIfReady('live');
     this.initializeChartIfReady('history');
+    
+    // Force check after a short delay to handle timing issues
+    setTimeout(() => {
+      console.log('⏰ Delayed check - sectors:', this.sectors?.length || 0);
+      if (this.sectors?.length > 0 && !this.chartsInitialized.donut) {
+        console.log('🔄 Force initializing donut chart');
+        this.initializeChartIfReady('donut');
+      }
+    }, 100);
   }
 
   private initializeChartIfReady(type: 'donut' | 'live' | 'history'): void {
+    console.log(`🔍 Checking ${type} chart:`, {
+      viewReady: this.viewReady,
+      alreadyInitialized: this.chartsInitialized[type],
+      hasData: this.hasDataForChart(type)
+    });
+    
     if (!this.viewReady || this.chartsInitialized[type]) return;
     
     const hasData = this.hasDataForChart(type);
     if (!hasData) return;
     
+    console.log(`✅ Initializing ${type} chart`);
     this.chartsInitialized[type] = true;
     this.createChart(type);
   }
   
   private hasDataForChart(type: 'donut' | 'live' | 'history'): boolean {
-    switch (type) {
-      case 'donut': return this.sectors?.length > 0;
-      case 'live': return this.liveTrend?.length > 0;
-      case 'history': return this.historyTrend?.length > 0;
-    }
+    const result = {
+      donut: this.sectors?.length > 0,
+      live: this.liveTrend?.length > 0,
+      history: this.historyTrend?.length > 0
+    }[type];
+    
+    console.log(`📊 hasDataForChart(${type}):`, {
+      result,
+      sectorsLength: this.sectors?.length || 0,
+      liveTrendLength: this.liveTrend?.length || 0,
+      historyTrendLength: this.historyTrend?.length || 0
+    });
+    
+    return result;
   }
   
   private createChart(type: 'donut' | 'live' | 'history'): void {
@@ -87,6 +128,15 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
   }
 
   public forceChartUpdate(): void {
+    console.log('🔄 forceChartUpdate called, current data:', {
+      sectors: this.sectors?.length || 0,
+      liveTrend: this.liveTrend?.length || 0,
+      historyTrend: this.historyTrend?.length || 0
+    });
+    
+    // Reset initialization flags to allow re-creation
+    this.chartsInitialized = { donut: false, live: false, history: false };
+    
     this.initializeChartIfReady('donut');
     this.initializeChartIfReady('live');
     this.initializeChartIfReady('history');
@@ -94,9 +144,24 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
 
   private syncDonut(sectors: PortfolioSectorSlice[]) {
     const canvas = this.sectorCanvasRef?.nativeElement;
-    if (!canvas || sectors.length === 0) return;
+    console.log('🍩 syncDonut called:', { canvas: !!canvas, sectorsLength: sectors.length, sectors });
+    
+    if (!canvas) {
+      console.error('❌ Canvas not found for sector chart');
+      return;
+    }
+    
+    if (sectors.length === 0) {
+      console.warn('⚠️ No sector data to display');
+      return;
+    }
     
     this.donut?.destroy();
+    
+    console.log('🎨 Creating doughnut chart with data:', {
+      labels: sectors.map(s => s.sector),
+      data: sectors.map(s => s.pct)
+    });
     
     this.donut = new Chart(canvas, {
       type: 'doughnut',
@@ -113,6 +178,8 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
         plugins: { legend: { display: false } }
       }
     });
+    
+    console.log('✅ Doughnut chart created successfully');
   }
 
   private syncLiveChart(trend: PnlTrendPoint[]) {
