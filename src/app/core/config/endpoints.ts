@@ -5,16 +5,8 @@ export const ENDPOINTS = {
     baseWs: 'ws://18.118.149.115:8082',
 
     // REST
-    analysisAll: '/api/analysis/all',            // GET List<AnalysisEntityDto>
-    sectorOverall: '/api/sectors/overall',  // GET List<SectorMetricsDto>
-    portfolioWiseSector: (portfolioId: string) => `/api/sectors/portfolio-wise/${portfolioId}`, // GET List<SectorMetricsDto>
-    portfolioWiseSectorDrilldown: (portfolioId: string, sector: string) => `/api/sectors/portfolio-wise/${portfolioId}/sector-wise/${sector}`, // GET sector-specific data
-    initialUnrealizedPnl: '/api/unrealized-pnl/calculate', // POST trigger calc
-    portfolioSector: (portfolioId: string) => `/api/sectors/portfolio-wise/${portfolioId}`, // GET List<SectorMetricsDto>
-    sectorDrilldown: (sector: string) => `/api/sectors/sector-wise/${sector}`, // GET List<SymbolMetricsDto>
-    portfolioSectorDrilldown: (portfolioId: string, sector: string) => `/api/portfolios/${portfolioId}/sectors/${sector}/symbols`, // GET List<SymbolMetricsDto>
-    portfolioHistory: (portfolioId: string) => `/api/portfolio_value/history/${portfolioId}`, // GET List<PortfolioValueHistoryDto>
-    portfolioValueHistory: (portfolioId: string) => `/api/portfolio_value/history/${portfolioId}`, // GET List<PortfolioValueHistoryDto>
+    analysisAll: '/api/analytics/analysis',            // GET List<AnalysisEntityDto>
+    sectorOverall: '/api/analytics/sectors/overall',  // GET List<SectorMetricsDto>
 
     // WS
     wsEndpoint: '/ws',
@@ -50,6 +42,7 @@ export const ENDPOINTS = {
     wsMetrics: '/ws/rttm/metrics', // emits real-time metrics
     wsPipeline: '/ws/rttm/pipeline', // emits pipeline updates
     wsAlerts: '/ws/rttm/alerts', // emits Alert[]
+    wsDlq: '/ws/rttm/dlq',    // emits DLQResponse[]
   },
 };
 
