@@ -7,6 +7,11 @@ export const ENDPOINTS = {
     // REST
     analysisAll: '/api/analytics/analysis',            // GET List<AnalysisEntityDto>
     sectorOverall: '/api/analytics/sectors/overall',  // GET List<SectorMetricsDto>
+    initialUnrealizedPnl: '/api/analytics/unrealized-pnl/trigger', // GET trigger calc
+    portfolioSector: (portfolioId: string) => `/api/analytics/portfolios/${portfolioId}/sectors`, // GET List<SectorMetricsDto>
+    sectorDrilldown: (sector: string) => `/api/analytics/sectors/${sector}/symbols`, // GET List<SymbolMetricsDto>
+    portfolioSectorDrilldown: (portfolioId: string, sector: string) => `/api/analytics/portfolios/${portfolioId}/sectors/${sector}/symbols`, // GET List<SymbolMetricsDto>
+    portfolioHistory: (portfolioId: string) => `/api/analytics/portfolios/${portfolioId}/history`, // GET List<PortfolioValueHistoryDto>
 
     // WS
     wsEndpoint: '/ws',
