@@ -341,7 +341,7 @@
 // }
 
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   BehaviorSubject,
   Observable,
@@ -355,6 +355,7 @@ import {
 import { AnalyticsApiService } from '../services/analytics-api.service';
 import { AnalyticsStompService } from '../services/analytics-stomp.service';
 import { LeaderboardWsService } from '../services/leaderboard-ws.service';
+import { LoggerService } from '../services/logger.service';
 
 import {
   AnalysisEntityDto,
@@ -382,6 +383,7 @@ const MAX_TREND_POINTS = 30;
 
 @Injectable({ providedIn: 'root' })
 export class PmsStore {
+  private readonly logger = inject(LoggerService);
   private readonly state$ = new BehaviorSubject<PmsState>({
     positions: {},
     unrealised: {},
@@ -408,7 +410,7 @@ export class PmsStore {
   readonly sectorExposure$: Observable<SectorExposure[]> = this.state$.pipe(
     map((state) => {
       const mapped = state.sectors.map((s) => ({ sector: s.sector, pct: s.percentage ?? 0 }));
-      console.log('Sector exposure data:', mapped);
+      this.logger.debug('Sector exposure data', mapped);
       return mapped;
     })
   );
@@ -431,7 +433,7 @@ export class PmsStore {
         take(1)
       )
       .subscribe(() => {
-        console.log('🚀 Socket Ready - WebSocket connection established');
+        this.logger.info('Socket Ready - WebSocket connection established');
         // Note: Trigger endpoint not available on this analytics service
       });
   }
@@ -480,7 +482,7 @@ export class PmsStore {
   private loadStaticData(): void {
     this.api.getAnalysisAll().pipe(takeUntil(this.destroy$)).subscribe({
       next: (positions) => {
-        console.log('Loaded positions:', positions);
+        this.logger.info('Loaded positions', { count: positions.length });
         const map: Record<string, AnalysisEntityDto> = {};
         positions.forEach(p => {
           if (p.id?.portfolioId && p.id?.symbol) {
@@ -490,15 +492,15 @@ export class PmsStore {
         });
         this.setState({ positions: map });
       },
-      error: (err) => console.warn('Positions not available:', err)
+      error: (err) => this.logger.warn('Positions not available', err)
     });
 
     this.api.getSectorOverall().pipe(takeUntil(this.destroy$)).subscribe({
       next: (sectors) => {
-        console.log('Loaded sector data:', sectors);
+        this.logger.info('Loaded sector data', { count: sectors.length });
         this.setState({ sectors });
       },
-      error: (err) => console.warn('Sector data not available:', err)
+      error: (err) => this.logger.warn('Sector data not available', err)
     });
   }
 

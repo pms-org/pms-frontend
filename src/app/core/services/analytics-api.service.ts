@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AnalysisEntityDto, SectorMetricsDto, SymbolMetricsDto } from '../models/analytics.models';
 import { ENDPOINTS, httpUrl } from '../config/endpoints';
+import { LoggerService } from './logger.service';
 
 // ✅ Interface needed for Chart 3
 export interface PortfolioValueHistoryDto {
@@ -19,6 +20,7 @@ export interface PortfolioValueHistoryDto {
 })
 export class AnalyticsApiService {
   private readonly http = inject(HttpClient);
+  private readonly logger = inject(LoggerService);
   // Using empty string to force proxy usage
   private readonly baseUrl = ENDPOINTS.analytics.baseHttp; 
 
@@ -42,7 +44,7 @@ export class AnalyticsApiService {
 
   getPortfolioSectorAnalysis(portfolioId: string): Observable<SectorMetricsDto[]> {
     const url = httpUrl(this.baseUrl, ENDPOINTS.analytics.portfolioSector(portfolioId));
-    console.log('🔗 API Call:', url);
+    this.logger.info('API Call: Portfolio sector analysis', { portfolioId, url });
     return this.http.get<SectorMetricsDto[]>(url);
   }
 

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { MetricCard, PipelineStage, DLQResponse } from '../models/rttm.models';
+import { MetricCard, PipelineStage, DLQResponse, TelemetrySnapshot } from '../models/rttm.models';
 import { ENDPOINTS, httpUrl } from '../config/endpoints';
 
 @Injectable({
@@ -25,6 +25,12 @@ export class RttmApiService {
   getDlq(): Observable<DLQResponse> {
     return this.http.get<DLQResponse>(
       httpUrl(ENDPOINTS.rttm.baseHttp, ENDPOINTS.rttm.dlq)
+    );
+  }
+
+  getTelemetrySnapshot(): Observable<TelemetrySnapshot> {
+    return this.http.get<TelemetrySnapshot>(
+      httpUrl(ENDPOINTS.rttm.baseHttp, ENDPOINTS.rttm.telemetrySnapshot)
     );
   }
 }

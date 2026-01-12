@@ -5,6 +5,18 @@ export interface MetricCard {
   status: 'healthy' | 'warning' | 'critical';
 }
 
+export interface TelemetrySnapshot {
+  tpsTrend: number[];
+  latencyMetrics: { label: string; value: number }[];
+  kafkaLag: { partition: string; lag: number }[];
+}
+
+export interface TelemetryMessage {
+  data: any;
+  type: 'TPS_TREND' | 'LATENCY_METRICS' | 'KAFKA_LAG';
+  timestamp: string;
+}
+
 export interface PipelineStage {
   name: string;
   count: number;

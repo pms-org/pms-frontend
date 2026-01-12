@@ -5,6 +5,7 @@ import { LeaderboardTableComponent } from './components/leaderboard-table.compon
 import { Portfolio } from '../../core/models/leaderboard.models';
 import { LeaderboardApiService } from '../../core/services/leaderboard-api.service';
 import { LeaderboardWsService } from '../../core/services/leaderboard-ws.service';
+import { ConnectionStatusService } from '../../core/services/connection-status.service';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { Subscription } from 'rxjs';
 
@@ -26,6 +27,7 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
 
   private leaderboardApi = inject(LeaderboardApiService);
   private leaderboardWs = inject(LeaderboardWsService);
+  private connectionStatus = inject(ConnectionStatusService);
   private wsSubscription?: Subscription;
 
   portfolios = signal<Portfolio[]>([]);
@@ -55,6 +57,7 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.connectionStatus.setDisconnected();
     console.log('LeaderboardPage initialized');
     console.log('Current endpoint option:', this.endpointOption());
     
@@ -67,6 +70,7 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.wsSubscription?.unsubscribe();
+    this.connectionStatus.setDisconnected();
   }
 
   ngAfterViewInit() {
@@ -114,6 +118,7 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
       // Try WebSocket first, fallback to HTTP API
       this.wsSubscription = this.leaderboardWs.stream().subscribe({
         next: data => {
+          this.connectionStatus.setWebSocketConnected();
           console.log('WebSocket data:', data);
           this.handleWsResponse(data);
         },
@@ -122,6 +127,7 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
           // Fallback to HTTP API instead of mock data
           this.leaderboardApi.getTopPerformers().subscribe({
             next: data => {
+              this.connectionStatus.setApiConnected();
               console.log('Fallback HTTP data:', data);
               this.handleApiResponse(data);
             },
@@ -137,6 +143,7 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
       const topValue = this.topValue();
       this.leaderboardApi.getTopPerformers(topValue).subscribe({
         next: data => {
+          this.connectionStatus.setApiConnected();
           console.log('Top performers data:', data);
           this.handleApiResponse(data);
         },
@@ -151,6 +158,7 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
       const range = this.range();
       this.leaderboardApi.getRankingsAround(portfolioId, range).subscribe({
         next: data => {
+          this.connectionStatus.setApiConnected();
           console.log('Around data:', data);
           this.handleApiResponse(data);
         },

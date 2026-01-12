@@ -1,8 +1,9 @@
+import { environment } from '../../../environments/environment';
+
 export const ENDPOINTS = {
   analytics: {
-    // Backend HTTP/Ws base (override in environment.*.ts)
-    baseHttp: 'http://18.118.149.115:8082',
-    baseWs: 'ws://18.118.149.115:8082',
+    baseHttp: environment.analytics.baseHttp,
+    baseWs: environment.analytics.baseWs,
 
     // REST
     analysisAll: '/api/analysis/all',
@@ -20,8 +21,8 @@ export const ENDPOINTS = {
   },
 
   leaderboard: {
-    baseHttp: 'http://localhost:8000',
-    baseWs: 'ws://localhost:8000',
+    baseHttp: environment.leaderboard.baseHttp,
+    baseWs: environment.leaderboard.baseWs,
 
     // REST
     portfolios: '/api/leaderboard/portfolios', // GET List<Portfolio>
@@ -35,19 +36,21 @@ export const ENDPOINTS = {
   },
 
   rttm: {
-    baseHttp: 'http://18.118.149.115:8081',
-    baseWs: 'ws://18.118.149.115:8081',
+    baseHttp: environment.rttm.baseHttp,
+    baseWs: environment.rttm.baseWs,
 
     // REST
     metrics: '/api/rttm/metrics', // GET MetricCard[]
     pipeline: '/api/rttm/pipeline', // GET PipelineStage[]
     dlq: '/api/rttm/dlq', // GET DLQ data
+    telemetrySnapshot: '/api/rttm/telemetry-snapshot',
 
     // WS
     wsMetrics: '/ws/rttm/metrics', // emits real-time metrics
     wsPipeline: '/ws/rttm/pipeline', // emits pipeline updates
-    wsAlerts: '/ws/rttm/alerts', // emits Alert[]
+    wsTelemetrySnapshot: '/ws/rttm/telemetry', // emits Alert[]
     wsDlq: '/ws/rttm/dlq',    // emits DLQResponse[]
+    wsAlerts: '/ws/rttm/alerts', // emits Alert[]
   },
 };
 

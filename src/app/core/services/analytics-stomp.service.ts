@@ -101,17 +101,19 @@
 
 
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
 import { ENDPOINTS } from '../config/endpoints';
 import { AnalysisEntityDto, UnrealisedPnlWsDto } from '../models/analytics.models';
+import { LoggerService } from './logger.service';
 
 @Injectable({ providedIn: 'root' })
 export class AnalyticsStompService {
   private client?: Client;
+  private readonly logger = inject(LoggerService);
 
   private readonly connectedSubject = new BehaviorSubject<boolean>(false);
   readonly connected$ = this.connectedSubject.asObservable();
@@ -132,11 +134,11 @@ export class AnalyticsStompService {
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,
-      debug: (str: string) => console.log('[STOMP]', str),
+      debug: (str: string) => this.logger.debug('[STOMP]', str),
     });
 
     this.client.onConnect = () => {
-      console.log('✅ STOMP Connected');
+      this.logger.info('STOMP Connected');
       this.connectedSubject.next(true);
 
       this.client?.subscribe(ENDPOINTS.analytics.topicPositions, (msg: IMessage) => {
@@ -148,7 +150,7 @@ export class AnalyticsStompService {
             this.positionUpdateSubject.next(this.normalizePosition(raw));
           }
         } catch (e) {
-          console.error('Error parsing position update', e);
+          this.logger.error('Error parsing position update', e);
         }
       });
 
@@ -162,13 +164,13 @@ export class AnalyticsStompService {
             this.unrealisedSubject.next([this.normalizeUnrealised(raw)]);
           }
         } catch (e) {
-          console.error('Error parsing unrealized pnl', e);
+          this.logger.error('Error parsing unrealized pnl', e);
         }
       });
     };
 
     this.client.onWebSocketClose = () => {
-      console.warn('⚠️ WebSocket Closed');
+      this.logger.warn('WebSocket Closed');
       this.connectedSubject.next(false);
     };
 

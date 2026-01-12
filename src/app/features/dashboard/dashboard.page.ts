@@ -8,7 +8,9 @@ import { MoversPanelComponent } from './components/movers-panel.component';
 import { SectorChartsComponent } from './components/sector-charts.component';
 
 import { PmsStore } from '../../core/state/pms.store';
-import { AnalyticsApiService } from '../../core/services/analytics-api.service'; // ✅ Import API Service
+import { AnalyticsApiService } from '../../core/services/analytics-api.service';
+import { AnalyticsStompService } from '../../core/services/analytics-stomp.service';
+import { ConnectionStatusService } from '../../core/services/connection-status.service';
 
 import {
   DashboardKpis,
@@ -36,7 +38,9 @@ import { SectorModalComponent, SectorSymbolRow } from './components/sector-modal
 })
 export class DashboardPage implements OnInit, OnDestroy {
   private readonly store = inject(PmsStore);
-  private readonly api = inject(AnalyticsApiService); // ✅ Inject Service
+  private readonly api = inject(AnalyticsApiService);
+  private readonly stomp = inject(AnalyticsStompService);
+  private readonly connectionStatus = inject(ConnectionStatusService);
 
   readonly dashboardRows$: Observable<PortfolioOverviewRow[]> = this.store.dashboardRows$;
   readonly kpis$: Observable<DashboardKpis> = this.store.kpis$;
@@ -52,18 +56,22 @@ export class DashboardPage implements OnInit, OnDestroy {
   private modalSub?: Subscription;
 
   ngOnInit(): void {
+    this.connectionStatus.setDisconnected();
+    this.connectionStatus.setApiConnected();
     this.store.init();
+    this.connectWebSocket();
   }
 
   ngOnDestroy(): void {
     this.store.destroy();
     this.modalSub?.unsubscribe();
+    this.stomp.disconnect();
   }
 
   openSectorModal(sector: string) {
     this.selectedSector = sector;
     
-    // ✅ REAL API CALL (Replaces MOCK_SECTOR_BREAKDOWN)
+    // REAL API CALL (Replaces MOCK_SECTOR_BREAKDOWN)
     this.modalSub = this.api.getSectorDrilldown(sector).subscribe({
       next: (data) => {
         // Map Backend DTO to UI Model
@@ -88,5 +96,14 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.sectorModalOpen = false;
     this.selectedSector = '';
     this.sectorRows = [];
+  }
+
+  private connectWebSocket(): void {
+    this.stomp.connected$.subscribe(connected => {
+      if (connected) {
+        this.connectionStatus.setWebSocketConnected();
+      }
+    });
+    this.stomp.connect();
   }
 }
