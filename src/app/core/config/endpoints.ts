@@ -5,8 +5,8 @@ export const ENDPOINTS = {
     baseWs: 'ws://localhost:8082',
 
     // REST
-    analysisAll: '/api/analytics/analysis',            // GET List<AnalysisEntityDto>
-    sectorOverall: '/api/analytics/sectors/overall',  // GET List<SectorMetricsDto>
+    analysisAll: '/api/analytics/analysis', // GET List<AnalysisEntityDto>
+    sectorOverall: '/api/analytics/sectors/overall', // GET List<SectorMetricsDto>
 
     // WS
     wsEndpoint: '/ws',
@@ -42,6 +42,7 @@ export const ENDPOINTS = {
     wsMetrics: '/ws/rttm/metrics', // emits real-time metrics
     wsPipeline: '/ws/rttm/pipeline', // emits pipeline updates
     wsAlerts: '/ws/rttm/alerts', // emits Alert[]
+    wsDlq: '/ws/rttm/dlq',    // emits DLQResponse[]
   },
 };
 
