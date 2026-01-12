@@ -1,28 +1,31 @@
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-  <div class="bg-gray-900 rounded-lg border border-gray-800 p-6">
-    <h3 class="text-lg font-semibold text-white mb-4">Sector Composition</h3>
-    <div class="h-64">
-      <canvas #donutCanvas></canvas>
-    </div>
-    <div class="mt-4 space-y-1 h-32 overflow-y-auto pr-2 custom-scrollbar">
-      <div *ngFor="let s of sectors()" class="flex justify-between items-center text-sm">
-        <span class="text-gray-400">{{ s.sector }}</span>
-        <span class="text-white font-medium">{{ s.pct }}%</span>
-      </div>
-    </div>
-  </div>
+<div class="charts-row">
+	<!-- Sector Composition card -->
+	<section class="chart-card">
+		<h3 class="chart-title">Sector Composition</h3>
+		<div class="chart-inner">
+			<canvas #sectorCanvas class="chart-canvas" aria-label="Sector Composition chart" role="img"></canvas>
+		</div>
+		<div class="mt-4 space-y-1 h-32 overflow-y-auto pr-2 custom-scrollbar">
+			<div *ngFor="let s of sectors" class="flex justify-between items-center text-sm">
+				<span class="text-gray-400">{{ s.sector }}</span>
+				<span class="text-white font-medium">{{ s.pct }}%</span>
+			</div>
+		</div>
+	</section>
 
-  <div class="bg-gray-900 rounded-lg border border-gray-800 p-6">
-    <h3 class="text-lg font-semibold text-white mb-4">Live PnL Trend</h3>
-    <div class="h-96">
-      <canvas #liveCanvas></canvas>
-    </div>
-  </div>
+	<!-- Live PnL Trend card -->
+	<section class="chart-card">
+		<h3 class="chart-title">Live PnL Trend</h3>
+		<div class="chart-inner">
+			<canvas #liveCanvas class="chart-canvas" aria-label="Live PnL Trend chart" role="img"></canvas>
+		</div>
+	</section>
 
-  <div class="bg-gray-900 rounded-lg border border-gray-800 p-6">
-    <h3 class="text-lg font-semibold text-white mb-4">30-Day Value History</h3>
-    <div class="h-96">
-      <canvas #historyCanvas></canvas>
-    </div>
-  </div>
+	<!-- 30-Day Value History card -->
+	<section class="chart-card">
+		<h3 class="chart-title">30-Day Value History</h3>
+		<div class="chart-inner">
+			<canvas #historyCanvas class="chart-canvas" aria-label="30-Day Value History chart" role="img"></canvas>
+		</div>
+	</section>
 </div>

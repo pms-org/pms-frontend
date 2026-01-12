@@ -406,7 +406,11 @@ export class PmsStore {
   );
 
   readonly sectorExposure$: Observable<SectorExposure[]> = this.state$.pipe(
-    map((state) => state.sectors.map((s) => ({ sector: s.sector, pct: s.percentage ?? 0 })))
+    map((state) => {
+      const mapped = state.sectors.map((s) => ({ sector: s.sector, pct: s.percentage ?? 0 }));
+      console.log('Sector exposure data:', mapped);
+      return mapped;
+    })
   );
 
   constructor(
@@ -427,11 +431,8 @@ export class PmsStore {
         take(1)
       )
       .subscribe(() => {
-        console.log('🚀 Socket Ready: Triggering Initial PnL Calculation...');
-        this.api.triggerUnrealizedPnlCalc().subscribe({
-          next: () => console.log('✅ Trigger Sent'),
-          error: (e) => console.error('❌ Trigger Failed', e)
-        });
+        console.log('🚀 Socket Ready - WebSocket connection established');
+        // Note: Trigger endpoint not available on this analytics service
       });
   }
 
@@ -477,7 +478,9 @@ export class PmsStore {
   }
 
   private loadStaticData(): void {
-    this.api.getAnalysisAll().pipe(takeUntil(this.destroy$)).subscribe((positions) => {
+    this.api.getAnalysisAll().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (positions) => {
+        console.log('Loaded positions:', positions);
         const map: Record<string, AnalysisEntityDto> = {};
         positions.forEach(p => {
           if (p.id?.portfolioId && p.id?.symbol) {
@@ -486,10 +489,16 @@ export class PmsStore {
           }
         });
         this.setState({ positions: map });
+      },
+      error: (err) => console.warn('Positions not available:', err)
     });
 
-    this.api.getSectorOverall().pipe(takeUntil(this.destroy$)).subscribe((sectors) => {
-      this.setState({ sectors });
+    this.api.getSectorOverall().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (sectors) => {
+        console.log('Loaded sector data:', sectors);
+        this.setState({ sectors });
+      },
+      error: (err) => console.warn('Sector data not available:', err)
     });
   }
 

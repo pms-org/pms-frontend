@@ -1,14 +1,77 @@
-<div class="bg-gray-900 rounded-lg border border-gray-800 p-6">
-  <h3 class="text-lg font-semibold text-white mb-4">Portfolio Sector Composition</h3>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div class="h-64">
-      <canvas #canvas></canvas>
-    </div>
-    <div class="space-y-2">
-      <div *ngFor="let s of sectors()" class="flex justify-between items-center py-1">
-        <span class="text-sm text-gray-300">{{ s.sector }}</span>
-        <span class="text-sm font-medium text-white">{{ s.pct }}%</span>
-      </div>
-    </div>
-  </div>
+<div class="charts-row">
+	<section class="chart-card">
+		<h3 class="chart-title">Sector Composition</h3>
+		<div class="data-list">
+			<div *ngFor="let sector of sectors()" class="data-item">
+				<span class="sector-name">{{sector.sector}}</span>
+				<span class="sector-pct">{{sector.pct}}%</span>
+			</div>
+		</div>
+	</section>
+
+	<section class="chart-card">
+		<h3 class="chart-title">Live PnL Trend</h3>
+		<div class="data-list">
+			<div *ngFor="let item of liveData; let i = index" class="data-item">
+				<span class="time-label">{{i}}:00</span>
+				<span class="value">${{item | number:'1.0-0'}}</span>
+			</div>
+		</div>
+	</section>
+
+	<section class="chart-card">
+		<h3 class="chart-title">30-Day Value History</h3>
+		<div class="data-list">
+			<div *ngFor="let item of historyData; let i = index" class="data-item">
+				<span class="day-label">Day {{i + 1}}</span>
+				<span class="value">${{item | number:'1.0-0'}}</span>
+			</div>
+		</div>
+	</section>
 </div>
+
+<!-- Minimal local styles to ensure canvases have height and are visible.
+     If you use a global stylesheet, move these rules there instead. -->
+<style>
+	.charts-row {
+		display: flex;
+		gap: 18px;
+		align-items: flex-start;
+		/* wrap on small screens */
+		flex-wrap: wrap;
+	}
+	.chart-card {
+		flex: 1 1 30%;
+		min-width: 260px;
+		background: rgba(255,255,255,0.02);
+		border-radius: 8px;
+		padding: 16px;
+		box-sizing: border-box;
+	}
+	.chart-title {
+		margin: 0 0 8px 0;
+		font-size: 1.05rem;
+		color: #e6f0ff;
+	}
+	.data-list {
+		background: rgba(0,0,0,0.15);
+		padding: 10px;
+		border-radius: 8px;
+		max-height: 220px;
+		overflow-y: auto;
+	}
+	.data-item {
+		display: flex;
+		justify-content: space-between;
+		padding: 4px 0;
+		border-bottom: 1px solid rgba(255,255,255,0.1);
+		color: #e6f0ff;
+		font-size: 0.9rem;
+	}
+	.data-item:last-child {
+		border-bottom: none;
+	}
+	@media (max-width: 900px) {
+		.chart-card { flex: 1 1 100%; }
+	}
+</style>

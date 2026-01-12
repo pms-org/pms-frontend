@@ -10,6 +10,8 @@ export interface PortfolioValueHistoryDto {
   portfolioId: string;
   date: string; 
   portfolioValue: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 @Injectable({
@@ -39,9 +41,9 @@ export class AnalyticsApiService {
   }
 
   getPortfolioSectorAnalysis(portfolioId: string): Observable<SectorMetricsDto[]> {
-    return this.http.get<SectorMetricsDto[]>(
-      httpUrl(this.baseUrl, ENDPOINTS.analytics.portfolioSector(portfolioId))
-    );
+    const url = httpUrl(this.baseUrl, ENDPOINTS.analytics.portfolioSector(portfolioId));
+    console.log('🔗 API Call:', url);
+    return this.http.get<SectorMetricsDto[]>(url);
   }
 
   getSectorDrilldown(sector: string): Observable<SymbolMetricsDto[]> {

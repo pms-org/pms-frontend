@@ -1,12 +1,68 @@
 {
-  "/api": {
+  "/api/analysis": {
     "target": "http://18.118.149.115:8082",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
   },
-  "/ws": {
+  "/api/sectors": {
     "target": "http://18.118.149.115:8082",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/api/portfolios": {
+    "target": "http://18.118.149.115:8082",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/api/unrealized-pnl": {
+    "target": "http://18.118.149.115:8082",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/swagger-ui": {
+    "target": "http://18.118.149.115:8082",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/v3/api-docs": {
+    "target": "http://18.118.149.115:8082",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/api/leaderboard": {
+    "target": "http://localhost:8000",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/api/rttm": {
+    "target": "http://localhost:8085",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/ws/updates": {
+    "target": "ws://localhost:8000",
+    "secure": false,
+    "changeOrigin": true,
+    "ws": true,
+    "logLevel": "debug"
+  },
+  "/ws/rttm": {
+    "target": "ws://localhost:8085",
+    "secure": false,
+    "changeOrigin": true,
+    "ws": true,
+    "logLevel": "debug"
+  },
+  "/ws": {
+    "target": "ws://18.118.149.115:8082",
     "secure": false,
     "changeOrigin": true,
     "ws": true,

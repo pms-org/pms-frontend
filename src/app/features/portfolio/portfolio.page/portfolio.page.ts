@@ -134,7 +134,7 @@
 
 
 
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -159,6 +159,8 @@ export class PortfolioPage implements OnInit, OnDestroy {
   private readonly store = inject(PmsStore);
   private readonly api = inject(AnalyticsApiService);
 
+  @ViewChild(PortfolioChartsComponent) chartsComponent!: PortfolioChartsComponent;
+
   portfolioId = '';
   private sub = new Subscription();
 
@@ -177,9 +179,17 @@ export class PortfolioPage implements OnInit, OnDestroy {
     this.portfolioId = this.route.snapshot.paramMap.get('portfolioId') ?? '';
     if (!this.portfolioId) { this.back(); return; }
 
+    console.log('🚀 Portfolio page initializing for:', this.portfolioId);
+
+    // Load all data in parallel and wait for completion
+    this.loadAllData();
+  }
+
+  private loadAllData(): void {
     // 1. Live Data from Store
     this.sub.add(
       this.store.selectPortfolio(this.portfolioId).subscribe((data) => {
+        console.log('📊 Store data received:', data);
         this.kpis = data.kpis;
         
         // Update Chart 2
@@ -201,27 +211,46 @@ export class PortfolioPage implements OnInit, OnDestroy {
     );
 
     // 2. Sector Composition
+    console.log('📊 Loading sector data for portfolio:', this.portfolioId);
     this.sub.add(
       this.api.getPortfolioSectorAnalysis(this.portfolioId).subscribe({
         next: (sectors) => {
-          this.sectors = sectors.map(s => ({ sector: s.sector, pct: s.percentage ?? 0 }));
+          console.log('✅ Sector API Response:', sectors);
+          this.sectors = [...sectors.map(s => ({ sector: s.sector, pct: s.percentage ?? 0 }))];
+          console.log('📊 Processed sectors for chart:', this.sectors);
+          // Trigger chart update after data is set
+          setTimeout(() => this.chartsComponent?.forceChartUpdate(), 100);
         },
-        error: (e: any) => console.error('Sector load failed', e)
+        error: (e: any) => console.error('❌ Sector load failed', e)
       })
     );
 
-    // 3. History (Matches new backend path)
+    // 3. History
+    console.log('📊 Loading history data for portfolio:', this.portfolioId);
     this.sub.add(
       this.api.getPortfolioHistory(this.portfolioId).subscribe({
         next: (history: PortfolioValueHistoryDto[]) => {
-          this.historyTrend = history
+          console.log('✅ History API Response:', history.length, 'items');
+          const uniqueByDate = history.reduce((acc, item) => {
+            const existing = acc.find(x => x.date === item.date);
+            if (!existing || new Date(item.createdAt) > new Date(existing.createdAt)) {
+              acc = acc.filter(x => x.date !== item.date);
+              acc.push(item);
+            }
+            return acc;
+          }, [] as PortfolioValueHistoryDto[]);
+          
+          this.historyTrend = uniqueByDate
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
             .map(h => ({
               label: h.date,
               value: h.portfolioValue
             }));
+          console.log('📊 Processed history for chart:', this.historyTrend.length, 'points');
+          // Trigger chart update after data is set
+          setTimeout(() => this.chartsComponent?.forceChartUpdate(), 100);
         },
-        error: (e: any) => console.error('History load failed', e)
+        error: (e: any) => console.error('❌ History load failed', e)
       })
     );
   }
