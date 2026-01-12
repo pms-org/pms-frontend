@@ -11,4 +11,5 @@ import { PipelineStage } from '../../../core/models/rttm.models';
 })
 export class PipelineFlowComponent {
   stages = input<PipelineStage[]>([]);
+  Math = Math;
 }
