@@ -164,6 +164,7 @@ export class PortfolioPage implements OnInit, OnDestroy {
 
   portfolioId = '';
   private sub = new Subscription();
+  private lastPnlValue = 0;
 
   kpis: PortfolioKpis = { portfolioId: '', totalInvestment: 0, unrealisedPnl: 0, realisedPnl: 0 };
   rows: PortfolioSymbolRow[] = [];
@@ -192,8 +193,9 @@ export class PortfolioPage implements OnInit, OnDestroy {
       this.store.selectPortfolio(this.portfolioId).subscribe((data) => {
         console.log('📊 Store data received:', data);
         this.kpis = data.kpis;
+        this.lastPnlValue = data.unrealisedDetails.overall;
         
-        // Update Chart 2
+        // Update Chart 2 - always add new point for live trend
         this.updateLiveTrend(data.unrealisedDetails.overall);
 
         // Update Table with per-symbol PnL
@@ -268,6 +270,9 @@ export class PortfolioPage implements OnInit, OnDestroy {
         error: (e: any) => console.error('❌ History load failed', e)
       })
     );
+
+    // Remove the simulation interval - rely on real WebSocket data
+    // The store subscription will fire every time WebSocket data arrives
   }
 
   ngOnDestroy(): void {
@@ -278,7 +283,19 @@ export class PortfolioPage implements OnInit, OnDestroy {
     const now = new Date();
     const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const newPoint = { label, value: currentValue };
-    this.livePnlTrend = [...this.livePnlTrend, newPoint].slice(-20); 
+    
+    // Always add new point for live updates (WebSocket data changes)
+    this.livePnlTrend = [...this.livePnlTrend, newPoint].slice(-20);
+    
+    console.log('📈 Live trend updated:', this.livePnlTrend.length, 'points, latest:', currentValue);
+    
+    // Force chart update with new live data
+    setTimeout(() => {
+      if (this.chartsComponent) {
+        this.chartsComponent.liveTrend = this.livePnlTrend;
+        this.chartsComponent.forceChartUpdate();
+      }
+    }, 50);
   }
 
   back(): void { this.router.navigate(['/dashboard']); }
