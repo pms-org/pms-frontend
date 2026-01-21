@@ -14,6 +14,7 @@ import { RttmWsMetricsService } from '../../core/services/rttm-ws-metrics.servic
 import { RttmWsPipelineService } from '../../core/services/rttm-ws-pipeline.service';
 import { RttmWsTelemetryService } from '../../core/services/rttm-ws-telemetry.service';
 import { RttmWsDlqService } from '../../core/services/rttm-ws-dlq.service';
+import { RttmWsAlertsService } from '../../core/services/rttm-ws-alerts.service';
 import { ConnectionStatusService } from '../../core/services/connection-status.service';
 import { MetricCardsComponent } from './components/metric-cards.component';
 import { PipelineFlowComponent } from './components/pipeline-flow.component';
@@ -41,6 +42,7 @@ export class RttmPage implements OnInit, OnDestroy {
   private readonly pipelineWs = inject(RttmWsPipelineService);
   private readonly telemetryWs = inject(RttmWsTelemetryService);
   private readonly dlqWs = inject(RttmWsDlqService);
+  private readonly alertsWs = inject(RttmWsAlertsService);
   private readonly connectionStatus = inject(ConnectionStatusService);
 
   data = signal<RttmData>(MOCK_RTTM_DATA);
@@ -53,7 +55,11 @@ export class RttmPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // WebSocket connections will be automatically closed
+    this.metricsWs.disconnect();
+    this.pipelineWs.disconnect();
+    this.telemetryWs.disconnect();
+    this.dlqWs.disconnect();
+    this.alertsWs.disconnect();
     this.connectionStatus.setDisconnected();
   }
 
@@ -131,6 +137,17 @@ export class RttmPage implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('WebSocket DLQ error:', error);
+      },
+    });
+
+    // Connect to Alerts WebSocket
+    this.alertsWs.stream().subscribe({
+      next: (alerts) => {
+        console.log('WebSocket alerts connected - switching to real-time updates');
+        this.data.update((current) => ({ ...current, alerts }));
+      },
+      error: (error) => {
+        console.error('WebSocket alerts error:', error);
       },
     });
   }

@@ -66,6 +66,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.store.destroy();
     this.modalSub?.unsubscribe();
     this.stomp.disconnect();
+    this.connectionStatus.setDisconnected();
   }
 
   openSectorModal(sector: string) {

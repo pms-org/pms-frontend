@@ -60,16 +60,12 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
     this.connectionStatus.setDisconnected();
     console.log('LeaderboardPage initialized');
     console.log('Current endpoint option:', this.endpointOption());
-    
-    // Test WebSocket server availability first
-    this.leaderboardWs.isServerAvailable().then((available: boolean) => {
-      console.log('WebSocket server available:', available);
-      this.loadData();
-    });
+    this.loadData();
   }
 
   ngOnDestroy() {
     this.wsSubscription?.unsubscribe();
+    this.leaderboardWs.disconnect();
     this.connectionStatus.setDisconnected();
   }
 
@@ -119,7 +115,7 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
       this.wsSubscription = this.leaderboardWs.stream().subscribe({
         next: data => {
           this.connectionStatus.setWebSocketConnected();
-          console.log('WebSocket data:', data);
+          console.log('WebSocket data received:', JSON.stringify(data, null, 2));
           this.handleWsResponse(data);
         },
         error: err => {

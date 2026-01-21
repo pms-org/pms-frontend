@@ -17,4 +17,11 @@ export class RttmWsPipelineService {
     }
     return this.socket$.pipe(share());
   }
+
+  disconnect(): void {
+    if (this.socket$) {
+      this.socket$.complete();
+      this.socket$ = undefined;
+    }
+  }
 }

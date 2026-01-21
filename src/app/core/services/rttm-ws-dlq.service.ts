@@ -17,4 +17,11 @@ export class RttmWsDlqService {
     }
     return this.socket$.pipe(share());
   }
+
+  disconnect(): void {
+    if (this.socket$) {
+      this.socket$.complete();
+      this.socket$ = undefined;
+    }
+  }
 }
