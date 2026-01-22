@@ -18,3 +18,19 @@
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: rgba(107, 114, 128, 1);
 }
+
+/* Row animation */
+tbody tr {
+  transition: transform 1.5s ease-in-out, background-color 0.5s ease-in-out;
+  position: relative;
+}
+
+.rank-up {
+  background-color: rgba(34, 197, 94, 0.3) !important;
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+}
+
+.rank-down {
+  background-color: rgba(239, 68, 68, 0.3) !important;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}

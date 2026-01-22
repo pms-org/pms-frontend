@@ -15,6 +15,10 @@ export interface Portfolio {
   portfolioId: string;
   name?: string;
   compositeScore?: number;
+  prevCompositeScore?: number;
+  scoreDirection?: 'up' | 'down' | 'none';
+  prevRank?: number;
+  showArrow?: boolean;
   avgReturn?: number;
   sharpe?: string;
   sortino?: string;

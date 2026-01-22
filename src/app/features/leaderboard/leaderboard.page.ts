@@ -81,6 +81,8 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
 
   onEndpointChange(option: EndpointOption) {
     this.wsSubscription?.unsubscribe();
+    this.leaderboardWs.disconnect();
+    this.connectionStatus.setDisconnected();
     this.endpointOption.set(option);
     this.loadData();
   }
@@ -120,10 +122,10 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
         },
         error: err => {
           console.error('WebSocket error, falling back to HTTP API:', err);
+          this.connectionStatus.setApiConnected();
           // Fallback to HTTP API instead of mock data
           this.leaderboardApi.getTopPerformers().subscribe({
             next: data => {
-              this.connectionStatus.setApiConnected();
               console.log('Fallback HTTP data:', data);
               this.handleApiResponse(data);
             },
@@ -134,35 +136,36 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
           });
         }
       });
-    } else if (option === 'top') {
-      // Use HTTP API for top performers
-      const topValue = this.topValue();
-      this.leaderboardApi.getTopPerformers(topValue).subscribe({
-        next: data => {
-          this.connectionStatus.setApiConnected();
-          console.log('Top performers data:', data);
-          this.handleApiResponse(data);
-        },
-        error: err => {
-          console.error('Error loading top performers:', err);
-          this.handleMockData();
-        }
-      });
-    } else if (option === 'around') {
-      // Use HTTP API for around portfolio
-      const portfolioId = this.portfolioId();
-      const range = this.range();
-      this.leaderboardApi.getRankingsAround(portfolioId, range).subscribe({
-        next: data => {
-          this.connectionStatus.setApiConnected();
-          console.log('Around data:', data);
-          this.handleApiResponse(data);
-        },
-        error: err => {
-          console.error('Error loading around data:', err);
-          this.handleMockData();
-        }
-      });
+    } else {
+      this.connectionStatus.setApiConnected();
+      if (option === 'top') {
+        // Use HTTP API for top performers
+        const topValue = this.topValue();
+        this.leaderboardApi.getTopPerformers(topValue).subscribe({
+          next: data => {
+            console.log('Top performers data:', data);
+            this.handleApiResponse(data);
+          },
+          error: err => {
+            console.error('Error loading top performers:', err);
+            this.handleMockData();
+          }
+        });
+      } else if (option === 'around') {
+        // Use HTTP API for around portfolio
+        const portfolioId = this.portfolioId();
+        const range = this.range();
+        this.leaderboardApi.getRankingsAround(portfolioId, range).subscribe({
+          next: data => {
+            console.log('Around data:', data);
+            this.handleApiResponse(data);
+          },
+          error: err => {
+            console.error('Error loading around data:', err);
+            this.handleMockData();
+          }
+        });
+      }
     }
   }
 
@@ -215,7 +218,6 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
 
   private handleWsResponse(data: any) {
     console.log('Raw WebSocket response:', data);
-    // Handle different possible data structures
     let entriesArray: any[] = [];
     
     if (Array.isArray(data)) {
@@ -231,16 +233,39 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
       return;
     }
     
-    const portfolios: Portfolio[] = entriesArray.map((item: any) => ({
-      rank: item.rank,
-      portfolioId: item.portfolioId,
-      name: item.portfolioName,
-      compositeScore: item.compositeScore || 0,
-      avgReturn: parseFloat(item.pnl || item.avgReturn || 0),
-      sharpe: item.sharpe || 'N/A',
-      sortino: item.sortino || 'N/A',
-      updatedAt: data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString()
-    }));
+    const currentPortfolios = this.portfolios();
+    
+    // Sort by composite score to calculate new ranks
+    entriesArray.sort((a, b) => (b.compositeScore || 0) - (a.compositeScore || 0));
+    
+    const portfolios: Portfolio[] = entriesArray.map((item: any, index: number) => {
+      const existing = currentPortfolios.find(p => p.portfolioId === item.portfolioId);
+      const newScore = item.compositeScore || 0;
+      const prevScore = existing?.compositeScore;
+      const newRank = index + 1;
+      
+      let direction: 'up' | 'down' | 'none' = existing?.scoreDirection || 'none';
+      if (prevScore !== undefined && newScore !== prevScore) {
+        direction = newScore > prevScore ? 'up' : 'down';
+      }
+      
+      console.log(`Portfolio ${item.portfolioId}: rank ${existing?.rank} -> ${newRank}, score ${prevScore} -> ${newScore}, direction: ${direction}`);
+      
+      return {
+        rank: newRank,
+        prevRank: existing?.rank,
+        portfolioId: item.portfolioId,
+        name: item.portfolioName,
+        compositeScore: newScore,
+        prevCompositeScore: prevScore,
+        scoreDirection: direction,
+        showArrow: direction !== 'none',
+        avgReturn: parseFloat(item.pnl || item.avgReturn || 0),
+        sharpe: item.sharpe || 'N/A',
+        sortino: item.sortino || 'N/A',
+        updatedAt: data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString()
+      };
+    });
     
     console.log('Converted portfolios from WS:', portfolios);
     this.portfolios.set(portfolios);

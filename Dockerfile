@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npm run build -- --configuration=k8s
+RUN npm run build -- --configuration=docker
 
 # Production stage
 FROM nginx:alpine
