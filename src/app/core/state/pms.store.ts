@@ -356,6 +356,7 @@ import { AnalyticsApiService } from '../services/analytics-api.service';
 import { AnalyticsStompService } from '../services/analytics-stomp.service';
 import { LeaderboardWsService } from '../services/leaderboard-ws.service';
 import { LoggerService } from '../services/logger.service';
+import { PortfolioApiService, InvestorDto } from '../services/portfolio-api.service';
 
 import {
   AnalysisEntityDto,
@@ -377,6 +378,7 @@ interface PmsState {
   unrealised: Record<string, { overall: number; bySymbol: Record<string, number>; ts: string }>;
   sectors: SectorMetricsDto[];
   leaderboard: LeaderboardEntry[];
+  investors: Record<string, InvestorDto>;
 }
 
 const MAX_TREND_POINTS = 30;
@@ -384,11 +386,13 @@ const MAX_TREND_POINTS = 30;
 @Injectable({ providedIn: 'root' })
 export class PmsStore {
   private readonly logger = inject(LoggerService);
+  private readonly portfolioApi = inject(PortfolioApiService);
   private readonly state$ = new BehaviorSubject<PmsState>({
     positions: {},
     unrealised: {},
     sectors: [],
     leaderboard: [],
+    investors: {},
   });
 
   private readonly destroy$ = new Subject<void>();
@@ -502,6 +506,18 @@ export class PmsStore {
       },
       error: (err) => this.logger.warn('Sector data not available', err)
     });
+
+    this.portfolioApi.getAllPortfolios().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (investors) => {
+        this.logger.info('Loaded investor data', { count: investors.length });
+        const map: Record<string, InvestorDto> = {};
+        investors.forEach(inv => {
+          map[inv.portfolioId] = inv;
+        });
+        this.setState({ investors: map });
+      },
+      error: (err) => this.logger.warn('Investor data not available - using fallback names', err)
+    });
   }
 
   private handleAnalyticsStomp(): void {
@@ -568,9 +584,10 @@ export class PmsStore {
 
     const ensureRow = (portfolioId: string): PortfolioOverviewRow => {
       if (!rows.has(portfolioId)) {
+        const investor = state.investors[portfolioId];
         rows.set(portfolioId, {
           portfolioId,
-          investorName: `Investor ${portfolioId.slice(0, 6).toUpperCase()}`,
+          investorName: investor?.name ?? `Investor ${portfolioId.slice(0, 6).toUpperCase()}`,
           holdings: 0,
           totalInvestment: 0,
           unrealisedPnl: 0,

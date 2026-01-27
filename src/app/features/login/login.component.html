@@ -1,0 +1,40 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2 class="login-title">Login</h2>
+    <form (ngSubmit)="onSubmit()" class="login-form">
+      <div *ngIf="errorMessage" class="text-red-500 text-sm mb-4">{{ errorMessage }}</div>
+      <div *ngIf="response" class="bg-green-900 text-green-200 text-sm p-4 rounded mb-4">
+        <div><strong>Login Successful!</strong></div>
+        <div class="mt-2"><strong>Token:</strong> {{ response.accessToken }}</div>
+        <div><strong>Type:</strong> {{ response.tokenType }}</div>
+        <div><strong>Expires In:</strong> {{ response.expiresIn }}s</div>
+      </div>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input 
+          type="text" 
+          id="username" 
+          [(ngModel)]="username" 
+          name="username"
+          class="form-input"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          [(ngModel)]="password" 
+          name="password"
+          class="form-input"
+          required
+        />
+      </div>
+      <button type="submit" class="login-button" [disabled]="loading">{{ loading ? 'Signing in...' : 'Sign In' }}</button>
+      <div class="text-center mt-4">
+        <a routerLink="/signup" class="text-blue-400 hover:text-blue-300 text-sm">Don't have an account? Sign up</a>
+      </div>
+    </form>
+  </div>
+</div>

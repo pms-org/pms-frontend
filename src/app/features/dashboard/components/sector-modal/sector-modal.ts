@@ -50,7 +50,7 @@ export class SectorModalComponent implements AfterViewInit, OnDestroy {
     if (!this.ready || !this.canvas) return;
 
     const labels = rows.map(r => r.symbol);
-    const values = rows.map(r => r.percentage);
+    const values = rows.map(r => r.holdings);
 
     if (!this.chart) {
       const config: ChartConfiguration<'doughnut'> = {

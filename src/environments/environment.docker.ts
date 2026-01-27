@@ -12,4 +12,7 @@ export const environment = {
     baseHttp: 'http://localhost:8080',
     baseWs: 'ws://localhost:8082',
   },
+  portfolio: {
+    baseHttp: 'http://localhost:8095',
+  },
 };

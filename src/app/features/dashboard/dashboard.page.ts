@@ -11,6 +11,7 @@ import { PmsStore } from '../../core/state/pms.store';
 import { AnalyticsApiService } from '../../core/services/analytics-api.service';
 import { AnalyticsStompService } from '../../core/services/analytics-stomp.service';
 import { ConnectionStatusService } from '../../core/services/connection-status.service';
+import { ToastService } from '../../core/services/toast.service';
 
 import {
   DashboardKpis,
@@ -41,6 +42,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   private readonly api = inject(AnalyticsApiService);
   private readonly stomp = inject(AnalyticsStompService);
   private readonly connectionStatus = inject(ConnectionStatusService);
+  private readonly toast = inject(ToastService);
 
   readonly dashboardRows$: Observable<PortfolioOverviewRow[]> = this.store.dashboardRows$;
   readonly kpis$: Observable<DashboardKpis> = this.store.kpis$;
@@ -70,25 +72,34 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   openSectorModal(sector: string) {
+    console.log('🔍 openSectorModal called with sector:', sector);
     this.selectedSector = sector;
     
-    // REAL API CALL (Replaces MOCK_SECTOR_BREAKDOWN)
+    console.log('📡 Fetching sector drilldown data...');
     this.modalSub = this.api.getSectorDrilldown(sector).subscribe({
       next: (data) => {
-        // Map Backend DTO to UI Model
+        console.log('✅ Sector drilldown data received:', data);
         this.sectorRows = data.map((d) => ({
           symbol: d.symbol,
           percentage: d.percentage,
           holdings: d.holdings,
           totalInvested: d.totalInvested,
-          realisedPnl: d.realizedPnl, // Note spelling: Backend 'z' -> UI 's' if needed
+          realisedPnl: d.realizedPnl,
         }));
         
+        console.log('📊 Mapped sector rows:', this.sectorRows);
         this.sectorModalOpen = true;
+        console.log('✅ Modal opened, sectorModalOpen:', this.sectorModalOpen);
       },
       error: (err) => {
-        console.error('Failed to load sector data', err);
-        // Optional: Handle error (e.g. show toast)
+        console.error('❌ Failed to load sector data', err);
+        if (err.status === 404) {
+          this.toast.error(`Sector drilldown endpoint not available. API returned 404.`);
+        } else if (err.status === 0) {
+          this.toast.error('Cannot connect to analytics service');
+        } else {
+          this.toast.error('Failed to load sector breakdown data');
+        }
       }
     });
   }

@@ -12,4 +12,7 @@ export const environment = {
     baseHttp: 'https://rttm.yourdomain.com',
     baseWs: 'wss://rttm.yourdomain.com',
   },
+  portfolio: {
+    baseHttp: 'https://portfolio.yourdomain.com',
+  },
 };

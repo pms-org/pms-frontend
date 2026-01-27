@@ -47,12 +47,41 @@
         {{ kpis.realisedPnl | money }}
       </div>
     </div>
+
+    <div *ngIf="investor" class="bg-gray-900 rounded-lg p-6 border border-gray-800">
+      <div class="text-gray-400 text-sm mb-2">Name</div>
+      <div class="text-white text-xl font-semibold">{{ investor.name }}</div>
+    </div>
+
+    <div *ngIf="investor" class="bg-gray-900 rounded-lg p-6 border border-gray-800">
+      <div class="text-gray-400 text-sm mb-2">Phone Number</div>
+      <div class="text-white text-xl font-semibold">{{ investor.phoneNumber }}</div>
+    </div>
+
+    <div *ngIf="investor" class="bg-gray-900 rounded-lg p-6 border border-gray-800">
+      <div class="text-gray-400 text-sm mb-2">Location</div>
+      <div class="text-white text-xl font-semibold">{{ investor.address }}</div>
+    </div>
   </div>
+
+  <!-- Debug: Show investor state -->
+  <div class="mt-2 text-xs text-gray-500">Investor loaded: {{ investor ? 'Yes' : 'No' }}</div>
 
   <!-- Symbol Table -->
   <div class="mt-6 bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
-    <div class="p-6 border-b border-gray-800">
+    <div class="p-6 border-b border-gray-800 flex justify-between items-center">
       <h2 class="text-xl font-semibold text-white">Positions (Symbol Breakdown)</h2>
+      <button
+        (click)="exportToPDF()"
+        class="flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export PDF
+      </button>
     </div>
 
     <div class="overflow-x-auto">

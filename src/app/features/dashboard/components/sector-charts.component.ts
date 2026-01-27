@@ -98,9 +98,11 @@ export class SectorChartsComponent implements AfterViewInit, OnDestroy {
         },
 
         onClick: (_evt, elements) => {
+          console.log('Chart clicked, elements:', elements);
           if (!elements?.length) return;
           const idx = elements[0].index;
           const sector = (this.donutChart?.data.labels?.[idx] as string) ?? '';
+          console.log('Emitting sector:', sector);
           if (sector) this.sectorClicked.emit(sector);
         },
       },

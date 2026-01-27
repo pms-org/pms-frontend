@@ -10,12 +10,12 @@ export const ENDPOINTS = {
     sectorOverall: '/api/sectors/overall',
     initialUnrealizedPnl: '/api/analytics/initial-unrealized-pnl',
     portfolioSector: (portfolioId: string) => `/api/sectors/portfolio-wise/${portfolioId}`,
-    sectorDrilldown: (sector: string) => `/api/analytics/sectors/${sector}/drilldown`,
+    sectorDrilldown: (sector: string) => `/api/sectors/sector-wise/${sector}`,
     portfolioSectorDrilldown: (portfolioId: string, sector: string) => `/api/analytics/portfolio/${portfolioId}/sectors/${sector}/drilldown`,
     portfolioHistory: (portfolioId: string) => `/api/portfolio_value/history/${portfolioId}`,
 
     // WS
-    wsEndpoint: '/ws',
+    wsEndpoint: `${environment.analytics.baseWs}/ws`,
     topicPositions: '/topic/position-update',
     topicUnrealised: '/topic/unrealized-pnl',
   },

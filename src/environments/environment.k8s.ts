@@ -12,4 +12,12 @@ export const environment = {
     baseHttp: 'http://rttm-service:8085',
     baseWs: 'ws://rttm-service:8085',
   },
+  portfolio: {
+    baseHttp: 'http://portfolio-service:8084',
+    baseWs: 'ws://portfolio-service:8084',
+  },
+  apiGateway: {
+    baseHttp: 'http://api-gateway-service:8080',
+    baseWs: 'ws://api-gateway-service:8080',
+  }
 };

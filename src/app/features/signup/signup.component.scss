@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+.login-container {
+  @apply min-h-screen flex items-center justify-center bg-gray-900;
+}
+
+.login-card {
+  @apply bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md;
+  border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.login-title {
+  @apply text-3xl font-bold text-white text-center mb-6;
+}
+
+.login-form {
+  @apply space-y-6;
+}
+
+.form-group {
+  @apply flex flex-col space-y-2;
+}
+
+.form-group label {
+  @apply text-sm font-medium text-gray-300;
+}
+
+.form-input {
+  @apply w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  transition: all 0.3s ease;
+}
+
+.form-input:hover {
+  @apply border-gray-500;
+}
+
+.login-button {
+  @apply w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800;
+  transition: background-color 0.3s ease;
+}
+
+.login-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.login-container::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: 4px;
+}
+
+.login-container::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.8);
+  border-radius: 4px;
+}
+
+.login-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 1);
+}

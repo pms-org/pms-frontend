@@ -134,13 +134,17 @@
 
 
 
-import { Component, OnInit, OnDestroy, inject, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 import { PmsStore } from '../../../core/state/pms.store';
 import { AnalyticsApiService, PortfolioValueHistoryDto } from '../../../core/services/analytics-api.service';
+import { PortfolioApiService, InvestorDto } from '../../../core/services/portfolio-api.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { PortfolioKpis, PortfolioSymbolRow, PortfolioSectorSlice } from '../../../core/models/portfolio-ui.models';
 import { PnlTrendPoint } from '../../../core/models/ui.models';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
@@ -159,10 +163,14 @@ export class PortfolioPage implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly store = inject(PmsStore);
   private readonly api = inject(AnalyticsApiService);
+  private readonly portfolioApi = inject(PortfolioApiService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly toast = inject(ToastService);
 
   @ViewChild(PortfolioChartsComponent) chartsComponent!: PortfolioChartsComponent;
 
   portfolioId = '';
+  investor: InvestorDto | null = null;
   private sub = new Subscription();
   private lastPnlValue = 0;
 
@@ -188,6 +196,28 @@ export class PortfolioPage implements OnInit, OnDestroy {
   }
 
   private loadAllData(): void {
+    console.log('🔍 Loading investor data for portfolio:', this.portfolioId);
+    
+    // Load investor details
+    this.sub.add(
+      this.portfolioApi.getPortfolioById(this.portfolioId).subscribe({
+        next: (investor) => {
+          console.log('✅ Investor data loaded:', investor);
+          this.investor = investor;
+          this.cdr.detectChanges();
+        },
+        error: (e) => {
+          console.error('❌ Investor load failed:', e);
+          if (e.status === 500) {
+            this.toast.error('Investor data not available for this portfolio');
+          } else if (e.status === 0) {
+            this.toast.error('Cannot connect to portfolio service');
+          }
+          this.investor = null;
+        }
+      })
+    );
+
     // 1. Live Data from Store
     this.sub.add(
       this.store.selectPortfolio(this.portfolioId).subscribe((data) => {
@@ -232,7 +262,10 @@ export class PortfolioPage implements OnInit, OnDestroy {
             }
           }, 50);
         },
-        error: (e: any) => console.error('❌ Sector load failed', e)
+        error: (e: any) => {
+          console.error('❌ Sector load failed', e);
+          this.toast.error('Failed to load sector data');
+        }
       })
     );
 
@@ -267,7 +300,10 @@ export class PortfolioPage implements OnInit, OnDestroy {
             }
           }, 50);
         },
-        error: (e: any) => console.error('❌ History load failed', e)
+        error: (e: any) => {
+          console.error('❌ History load failed', e);
+          this.toast.error('Failed to load portfolio history');
+        }
       })
     );
 
@@ -315,4 +351,51 @@ export class PortfolioPage implements OnInit, OnDestroy {
   }
   
   closeSectorModal(): void { this.sectorModalOpen = false; }
+
+  exportToPDF(): void {
+    const doc = new jsPDF();
+
+    // Title
+    doc.setFontSize(18);
+    doc.text('Portfolio Report', 14, 20);
+
+    // Investor Details
+    if (this.investor) {
+      doc.setFontSize(12);
+      doc.text('Investor Details', 14, 35);
+      doc.setFontSize(10);
+      doc.text(`Name: ${this.investor.name}`, 14, 42);
+      doc.text(`Phone: ${this.investor.phoneNumber}`, 14, 48);
+      doc.text(`Address: ${this.investor.address}`, 14, 54);
+    }
+
+    // Portfolio Summary
+    doc.setFontSize(12);
+    doc.text('Portfolio Summary', 14, this.investor ? 65 : 35);
+    doc.setFontSize(10);
+    const startY = this.investor ? 72 : 42;
+    doc.text(`Portfolio ID: ${this.kpis.portfolioId}`, 14, startY);
+    doc.text(`Total Investment: $${this.kpis.totalInvestment.toFixed(2)}`, 14, startY + 6);
+    doc.text(`Unrealised PnL: $${this.kpis.unrealisedPnl.toFixed(2)}`, 14, startY + 12);
+    doc.text(`Realised PnL: $${this.kpis.realisedPnl.toFixed(2)}`, 14, startY + 18);
+
+    // Positions Table
+    const tableData = this.rows.map(r => [
+      r.symbol,
+      r.holdings.toString(),
+      `$${r.totalInvestment.toFixed(2)}`,
+      `$${r.unrealisedPnl.toFixed(2)}`,
+      `$${r.realisedPnl.toFixed(2)}`
+    ]);
+
+    autoTable(doc, {
+      startY: startY + 28,
+      head: [['Symbol', 'Holdings', 'Total Investment', 'Unrealised PnL', 'Realised PnL']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    doc.save(`portfolio-${this.portfolioId}.pdf`);
+  }
 }

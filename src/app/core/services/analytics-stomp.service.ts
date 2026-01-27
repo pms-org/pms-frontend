@@ -141,32 +141,34 @@ export class AnalyticsStompService {
       this.logger.info('STOMP Connected');
       this.connectedSubject.next(true);
 
-      this.client?.subscribe(ENDPOINTS.analytics.topicPositions, (msg: IMessage) => {
-        try {
-          const raw = JSON.parse(msg.body);
-          if (Array.isArray(raw)) {
-            raw.forEach(item => this.positionUpdateSubject.next(this.normalizePosition(item)));
-          } else {
-            this.positionUpdateSubject.next(this.normalizePosition(raw));
+      setTimeout(() => {
+        this.client?.subscribe(ENDPOINTS.analytics.topicPositions, (msg: IMessage) => {
+          try {
+            const raw = JSON.parse(msg.body);
+            if (Array.isArray(raw)) {
+              raw.forEach(item => this.positionUpdateSubject.next(this.normalizePosition(item)));
+            } else {
+              this.positionUpdateSubject.next(this.normalizePosition(raw));
+            }
+          } catch (e) {
+            this.logger.error('Error parsing position update', e);
           }
-        } catch (e) {
-          this.logger.error('Error parsing position update', e);
-        }
-      });
+        });
 
-      this.client?.subscribe(ENDPOINTS.analytics.topicUnrealised, (msg: IMessage) => {
-        try {
-          const raw = JSON.parse(msg.body);
-          if (Array.isArray(raw)) {
-            const normalized = raw.map(item => this.normalizeUnrealised(item));
-            this.unrealisedSubject.next(normalized);
-          } else {
-            this.unrealisedSubject.next([this.normalizeUnrealised(raw)]);
+        this.client?.subscribe(ENDPOINTS.analytics.topicUnrealised, (msg: IMessage) => {
+          try {
+            const raw = JSON.parse(msg.body);
+            if (Array.isArray(raw)) {
+              const normalized = raw.map(item => this.normalizeUnrealised(item));
+              this.unrealisedSubject.next(normalized);
+            } else {
+              this.unrealisedSubject.next([this.normalizeUnrealised(raw)]);
+            }
+          } catch (e) {
+            this.logger.error('Error parsing unrealized pnl', e);
           }
-        } catch (e) {
-          this.logger.error('Error parsing unrealized pnl', e);
-        }
-      });
+        });
+      }, 100);
     };
 
     this.client.onWebSocketClose = () => {

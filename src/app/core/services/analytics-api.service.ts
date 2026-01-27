@@ -5,7 +5,7 @@ import { AnalysisEntityDto, SectorMetricsDto, SymbolMetricsDto } from '../models
 import { ENDPOINTS, httpUrl } from '../config/endpoints';
 import { LoggerService } from './logger.service';
 
-// ✅ Interface needed for Chart 3
+// Interface needed for Chart 3
 export interface PortfolioValueHistoryDto {
   id: string;
   portfolioId: string;
@@ -60,7 +60,7 @@ export class AnalyticsApiService {
     );
   }
 
-  // ✅ The Missing Method causing your error
+  // The Missing Method causing your error
   getPortfolioHistory(portfolioId: string): Observable<PortfolioValueHistoryDto[]> {
     return this.http.get<PortfolioValueHistoryDto[]>(
       httpUrl(this.baseUrl, ENDPOINTS.analytics.portfolioHistory(portfolioId))
