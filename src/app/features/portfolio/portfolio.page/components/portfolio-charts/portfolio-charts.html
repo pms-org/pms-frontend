@@ -17,10 +17,36 @@
 		</section>
 	</div>
 
-	<!-- Live PnL Trend card -->
+	<!-- Live PnL Trend card - Real-time WebSocket updates for this portfolio -->
 	<div>
 		<section class="chart-card">
-			<h3 class="chart-title">Live PnL Trend</h3>
+			<div class="flex justify-between items-center mb-2">
+				<h3 class="chart-title">Live PnL Trend</h3>
+				<div class="flex items-center gap-2">
+					<span class="relative flex h-3 w-3">
+						<span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+							  [ngClass]="{
+								'bg-green-400': dataSource === 'websocket',
+								'bg-yellow-400': dataSource === 'api',
+								'bg-red-400': dataSource === 'none'
+							  }"></span>
+						<span class="relative inline-flex rounded-full h-3 w-3"
+							  [ngClass]="{
+								'bg-green-500': dataSource === 'websocket',
+								'bg-yellow-500': dataSource === 'api',
+								'bg-red-500': dataSource === 'none'
+							  }"></span>
+					</span>
+					<span class="text-xs font-medium"
+						  [ngClass]="{
+							'text-green-400': dataSource === 'websocket',
+							'text-yellow-400': dataSource === 'api',
+							'text-red-400': dataSource === 'none'
+						  }">
+						{{ dataSource === 'websocket' ? 'LIVE' : dataSource === 'api' ? 'API' : 'NO DATA' }}
+					</span>
+				</div>
+			</div>
 			<div class="chart-inner">
 				<canvas #liveCanvas class="chart-canvas" aria-label="Live PnL Trend chart" role="img"></canvas>
 			</div>

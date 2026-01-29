@@ -175,6 +175,8 @@ export class PortfolioPage implements OnInit, OnDestroy {
   investor: InvestorDto | null = null;
   private sub = new Subscription();
   private lastPnlValue = 0;
+  private updateInterval: any;
+  dataSource: 'websocket' | 'api' | 'none' = 'none';
 
   kpis: PortfolioKpis = { portfolioId: '', totalInvestment: 0, unrealisedPnl: 0, realisedPnl: 0 };
   rows: PortfolioSymbolRow[] = [];
@@ -221,15 +223,29 @@ export class PortfolioPage implements OnInit, OnDestroy {
       })
     );
 
-    // 1. Live Data from Store
+    // 1. Live Data from Store (WebSocket)
     this.sub.add(
       this.store.selectPortfolio(this.portfolioId).subscribe((data) => {
-        console.log('📊 Store data received:', data);
+        console.log('📊 Store data received for portfolio:', this.portfolioId, data);
+        console.log('📊 Unrealised PnL:', data.unrealisedDetails.overall);
+        
+        // Detect data source
+        if (data.unrealisedDetails.overall !== 0 || Object.keys(data.unrealisedDetails.bySymbol).length > 0) {
+          this.dataSource = 'websocket';
+          console.log('✅ Data source: WEBSOCKET (real-time)');
+        } else {
+          this.dataSource = 'none';
+          console.log('⚠️ Data source: NONE');
+        }
+        
         this.kpis = data.kpis;
         this.lastPnlValue = data.unrealisedDetails.overall;
         
-        // Update Chart 2 - always add new point for live trend
-        this.updateLiveTrend(data.unrealisedDetails.overall);
+        // Initialize with first point and start periodic updates
+        if (this.livePnlTrend.length === 0 && data.unrealisedDetails.overall !== 0) {
+          this.addLiveTrendPoint(data.unrealisedDetails.overall);
+          this.startPeriodicUpdates();
+        }
 
         // Update Table with per-symbol PnL
         this.rows = data.positions.map(p => {
@@ -316,25 +332,25 @@ export class PortfolioPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
   }
 
-  private updateLiveTrend(currentValue: number) {
+  private startPeriodicUpdates(): void {
+    this.updateInterval = setInterval(() => {
+      if (this.lastPnlValue !== 0) {
+        this.addLiveTrendPoint(this.lastPnlValue);
+      }
+    }, 3000);
+  }
+
+  private addLiveTrendPoint(currentValue: number): void {
     const now = new Date();
     const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const newPoint = { label, value: currentValue };
-    
-    // Always add new point for live updates (WebSocket data changes)
-    this.livePnlTrend = [...this.livePnlTrend, newPoint].slice(-20);
-    
-    console.log('📈 Live trend updated:', this.livePnlTrend.length, 'points, latest:', currentValue);
-    
-    // Force chart update with new live data
-    setTimeout(() => {
-      if (this.chartsComponent) {
-        this.chartsComponent.liveTrend = this.livePnlTrend;
-        this.chartsComponent.forceChartUpdate();
-      }
-    }, 50);
+    this.livePnlTrend = [...this.livePnlTrend, { label, value: currentValue }].slice(-30);
+    console.log('📈 Point added:', label, currentValue, '| Total:', this.livePnlTrend.length);
+    this.cdr.detectChanges();
   }
 
   back(): void { this.router.navigate(['/dashboard']); }

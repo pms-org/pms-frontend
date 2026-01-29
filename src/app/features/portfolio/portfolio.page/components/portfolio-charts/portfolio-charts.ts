@@ -18,6 +18,7 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
   @Input() sectors: PortfolioSectorSlice[] = [];
   @Input() liveTrend: PnlTrendPoint[] = [];
   @Input() historyTrend: PnlTrendPoint[] = [];
+  @Input() dataSource: 'websocket' | 'api' | 'none' = 'none';
 
   @Output() sectorClicked = new EventEmitter<string>();
 
@@ -54,12 +55,10 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
       }
     }
     
-    if (changes['liveTrend'] && this.liveTrend?.length > 0) {
-      console.log('📈 Live trend changed:', this.liveTrend.length, 'points');
-      if (this.viewReady && this.chartsInitialized.live) {
+    if (changes['liveTrend']) {
+      console.log('📈 Live trend changed:', this.liveTrend?.length || 0, 'points', this.liveTrend);
+      if (this.viewReady) {
         this.syncLiveChart(this.liveTrend);
-      } else {
-        this.initializeChartIfReady('live');
       }
     }
     
@@ -76,6 +75,9 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
   ngAfterViewInit(): void {
     this.viewReady = true;
     console.log('🔧 View initialized, sectors available:', this.sectors?.length || 0);
+    console.log('🔧 Live trend available:', this.liveTrend?.length || 0);
+    console.log('🔧 History trend available:', this.historyTrend?.length || 0);
+    
     // Try to initialize any charts that have data ready
     this.initializeChartIfReady('donut');
     this.initializeChartIfReady('live');
@@ -83,10 +85,14 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
     
     // Force check after a short delay to handle timing issues
     setTimeout(() => {
-      console.log('⏰ Delayed check - sectors:', this.sectors?.length || 0);
+      console.log('⏰ Delayed check - sectors:', this.sectors?.length || 0, 'live:', this.liveTrend?.length || 0);
       if (this.sectors?.length > 0 && !this.chartsInitialized.donut) {
         console.log('🔄 Force initializing donut chart');
         this.initializeChartIfReady('donut');
+      }
+      if (this.liveTrend?.length > 0 && !this.liveChart) {
+        console.log('🔄 Force initializing live chart');
+        this.syncLiveChart(this.liveTrend);
       }
     }, 100);
   }
@@ -209,12 +215,28 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
 
   private syncLiveChart(trend: PnlTrendPoint[]) {
     const canvas = this.liveCanvasRef?.nativeElement;
-    console.log('📈 syncLiveChart called:', { canvas: !!canvas, trendLength: trend.length });
+    console.log('📈 syncLiveChart called:', { canvas: !!canvas, trendLength: trend?.length || 0, dataSource: this.dataSource });
     
-    if (!canvas || trend.length === 0) return;
+    if (!canvas) {
+      console.warn('⚠️ Live chart canvas not available');
+      return;
+    }
+    
+    if (!trend || trend.length === 0) {
+      console.log('📈 No trend data yet, waiting...');
+      return;
+    }
+    
+    // Determine color based on data source
+    const colors = {
+      websocket: { border: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
+      api: { border: '#eab308', bg: 'rgba(234, 179, 8, 0.1)' },
+      none: { border: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' }
+    };
+    const color = colors[this.dataSource];
     
     if (!this.liveChart) {
-      console.log('✨ Creating new live chart');
+      console.log('✨ Creating new live PnL chart with', trend.length, 'points, source:', this.dataSource);
       this.liveChart = new Chart(canvas, {
         type: 'line',
         data: { 
@@ -222,35 +244,58 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
           datasets: [{ 
             label: 'Real-Time PnL', 
             data: trend.map(t => t.value), 
-            borderColor: '#10b981', 
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderColor: color.border,
+            backgroundColor: color.bg,
             tension: 0.4,
             fill: true,
-            pointRadius: 3,
-            pointHoverRadius: 5
+            pointRadius: 2,
+            pointHoverRadius: 5,
+            borderWidth: 2
           }] 
         },
         options: { 
           responsive: true, 
-          maintainAspectRatio: false, 
-          plugins: { legend: { display: false } },
+          maintainAspectRatio: false,
+          animation: { duration: 300 },
+          plugins: { 
+            legend: { display: false },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                label: (context) => `PnL: $${context.parsed.y?.toFixed(2) ?? '0.00'}`
+              }
+            }
+          },
           scales: {
             y: {
               grid: { color: 'rgba(255, 255, 255, 0.1)' },
-              ticks: { color: '#9ca3af' }
+              ticks: { 
+                color: '#9ca3af',
+                callback: (value) => `$${Number(value).toFixed(0)}`
+              }
             },
             x: {
               grid: { color: 'rgba(255, 255, 255, 0.1)' },
-              ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 }
+              ticks: { 
+                color: '#9ca3af', 
+                maxRotation: 45, 
+                minRotation: 45,
+                maxTicksLimit: 10
+              }
             }
           }
         }
       });
+      console.log('✅ Live chart created successfully');
     } else {
-      console.log('🔄 Updating existing live chart with', trend.length, 'points');
+      console.log('🔄 Updating live chart with', trend.length, 'points, source:', this.dataSource);
       this.liveChart.data.labels = trend.map(t => t.label);
       this.liveChart.data.datasets[0].data = trend.map(t => t.value);
-      this.liveChart.update('none');
+      this.liveChart.data.datasets[0].borderColor = color.border;
+      this.liveChart.data.datasets[0].backgroundColor = color.bg;
+      this.liveChart.update('active');
+      console.log('✅ Live chart updated');
     }
   }
 
