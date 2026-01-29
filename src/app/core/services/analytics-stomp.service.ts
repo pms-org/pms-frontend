@@ -125,9 +125,13 @@ export class AnalyticsStompService {
   readonly unrealised$ = this.unrealisedSubject.asObservable();
 
   connect(): void {
-    if (this.connectedSubject.value) return; 
+    if (this.connectedSubject.value) {
+      this.logger.info('Already connected to STOMP');
+      return;
+    }
 
     const sockJsUrl = ENDPOINTS.analytics.wsEndpoint; 
+    this.logger.info('Connecting to STOMP', { url: sockJsUrl });
 
     this.client = new Client({
       webSocketFactory: () => new SockJS(sockJsUrl),
@@ -142,9 +146,11 @@ export class AnalyticsStompService {
       this.connectedSubject.next(true);
 
       setTimeout(() => {
+        this.logger.info('Subscribing to topics');
         this.client?.subscribe(ENDPOINTS.analytics.topicPositions, (msg: IMessage) => {
           try {
             const raw = JSON.parse(msg.body);
+            this.logger.debug('Position update received', raw);
             if (Array.isArray(raw)) {
               raw.forEach(item => this.positionUpdateSubject.next(this.normalizePosition(item)));
             } else {
@@ -158,6 +164,7 @@ export class AnalyticsStompService {
         this.client?.subscribe(ENDPOINTS.analytics.topicUnrealised, (msg: IMessage) => {
           try {
             const raw = JSON.parse(msg.body);
+            this.logger.debug('Unrealized PnL received', raw);
             if (Array.isArray(raw)) {
               const normalized = raw.map(item => this.normalizeUnrealised(item));
               this.unrealisedSubject.next(normalized);
@@ -174,6 +181,14 @@ export class AnalyticsStompService {
     this.client.onWebSocketClose = () => {
       this.logger.warn('WebSocket Closed');
       this.connectedSubject.next(false);
+    };
+
+    this.client.onWebSocketError = (error) => {
+      this.logger.error('WebSocket Error', error);
+    };
+
+    this.client.onStompError = (frame) => {
+      this.logger.error('STOMP Error', frame);
     };
 
     this.client.activate();

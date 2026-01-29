@@ -6,11 +6,11 @@ export const environment = {
   },
   leaderboard: {
     baseHttp: 'http://localhost:8080',
-    baseWs: 'http://localhost:8000',
+    baseWs: 'ws://localhost:8000',
   },
   rttm: {
     baseHttp: 'http://localhost:8080',
-    baseWs: 'http://localhost:8082',
+    baseWs: 'ws://localhost:8087',
   },
   portfolio: {
     baseHttp: 'http://localhost:8095',

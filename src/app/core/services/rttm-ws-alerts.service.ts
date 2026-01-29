@@ -12,6 +12,7 @@ export class RttmWsAlertsService {
     if (!this.socket$) {
       this.socket$ = webSocket<Alert[]>({
         url: wsUrl(ENDPOINTS.rttm.baseWs, ENDPOINTS.rttm.wsAlerts),
+        WebSocketCtor: WebSocket,
         deserializer: (event) => JSON.parse((event as MessageEvent).data)
       });
     }

@@ -12,6 +12,7 @@ export class RttmWsPipelineService {
     if (!this.socket$) {
       this.socket$ = webSocket<PipelineStage[]>({
         url: wsUrl(ENDPOINTS.rttm.baseWs, ENDPOINTS.rttm.wsPipeline),
+        WebSocketCtor: WebSocket,
         deserializer: (event) => JSON.parse((event as MessageEvent).data)
       });
     }

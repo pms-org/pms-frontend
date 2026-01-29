@@ -12,6 +12,7 @@ export class RttmWsMetricsService {
     if (!this.socket$) {
       this.socket$ = webSocket<MetricCard[]>({
         url: wsUrl(ENDPOINTS.rttm.baseWs, ENDPOINTS.rttm.wsMetrics),
+        WebSocketCtor: WebSocket,
         deserializer: (event) => JSON.parse((event as MessageEvent).data)
       });
     }

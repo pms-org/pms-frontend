@@ -145,6 +145,7 @@ import { PmsStore } from '../../../core/state/pms.store';
 import { AnalyticsApiService, PortfolioValueHistoryDto } from '../../../core/services/analytics-api.service';
 import { PortfolioApiService, InvestorDto } from '../../../core/services/portfolio-api.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ConnectionStatusService } from '../../../core/services/connection-status.service';
 import { PortfolioKpis, PortfolioSymbolRow, PortfolioSectorSlice } from '../../../core/models/portfolio-ui.models';
 import { PnlTrendPoint } from '../../../core/models/ui.models';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
@@ -166,6 +167,7 @@ export class PortfolioPage implements OnInit, OnDestroy {
   private readonly portfolioApi = inject(PortfolioApiService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly toast = inject(ToastService);
+  private readonly connectionStatus = inject(ConnectionStatusService);
 
   @ViewChild(PortfolioChartsComponent) chartsComponent!: PortfolioChartsComponent;
 
@@ -190,6 +192,7 @@ export class PortfolioPage implements OnInit, OnDestroy {
     if (!this.portfolioId) { this.back(); return; }
 
     console.log('🚀 Portfolio page initializing for:', this.portfolioId);
+    this.connectionStatus.setApiConnected();
 
     // Load all data in parallel and wait for completion
     this.loadAllData();

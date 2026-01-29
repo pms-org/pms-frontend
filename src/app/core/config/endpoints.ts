@@ -11,7 +11,7 @@ export const ENDPOINTS = {
     initialUnrealizedPnl: '/api/analytics/initial-unrealized-pnl',
     portfolioSector: (portfolioId: string) => `/api/sectors/portfolio-wise/${portfolioId}`,
     sectorDrilldown: (sector: string) => `/api/sectors/sector-wise/${sector}`,
-    portfolioSectorDrilldown: (portfolioId: string, sector: string) => `/api/analytics/portfolio/${portfolioId}/sectors/${sector}/drilldown`,
+    portfolioSectorDrilldown: (portfolioId: string, sector: string) => `/api/sectors/portfolio-wise/${portfolioId}/sector-wise/${sector}`,
     portfolioHistory: (portfolioId: string) => `/api/portfolio_value/history/${portfolioId}`,
 
     // WS

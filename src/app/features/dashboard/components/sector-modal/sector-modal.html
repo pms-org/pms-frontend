@@ -9,12 +9,20 @@
         <div class="text-white font-semibold text-lg">
           Sector Breakdown — {{ sectorName() }}
         </div>
-        <button
-          class="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800/50 transition"
-          (click)="close()"
-        >
-          Close
-        </button>
+        <div class="flex gap-2">
+          <button
+            class="rounded-lg border border-blue-600 bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 transition"
+            (click)="exportPDF()"
+          >
+            Export PDF
+          </button>
+          <button
+            class="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800/50 transition"
+            (click)="close()"
+          >
+            Close
+          </button>
+        </div>
       </div>
 
       <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">

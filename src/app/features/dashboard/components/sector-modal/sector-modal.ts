@@ -2,6 +2,8 @@ import { Component, input, output, AfterViewInit, ViewChild, ElementRef, OnDestr
 import { CommonModule } from '@angular/common';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 Chart.register(...registerables);
 
@@ -44,6 +46,34 @@ export class SectorModalComponent implements AfterViewInit, OnDestroy {
 
   close(): void {
     this.closed.emit();
+  }
+
+  exportPDF(): void {
+    const doc = new jsPDF();
+    const sector = this.sectorName();
+    const rows = this.rows();
+
+    doc.setFontSize(18);
+    doc.text(`Sector Breakdown - ${sector}`, 14, 20);
+
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 28);
+
+    autoTable(doc, {
+      startY: 35,
+      head: [['Symbol', '%', 'Holdings', 'Total Invested', 'Realized PnL']],
+      body: rows.map(r => [
+        r.symbol,
+        `${r.percentage.toFixed(1)}%`,
+        r.holdings.toString(),
+        `$${r.totalInvested.toLocaleString()}`,
+        `$${r.realisedPnl.toLocaleString()}`
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+
+    doc.save(`sector-breakdown-${sector}-${Date.now()}.pdf`);
   }
 
   private sync(rows: SectorSymbolRow[]) {

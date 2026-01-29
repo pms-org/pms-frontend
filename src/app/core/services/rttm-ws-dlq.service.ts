@@ -12,6 +12,7 @@ export class RttmWsDlqService {
     if (!this.socket$) {
       this.socket$ = webSocket<DLQResponse>({
         url: wsUrl(ENDPOINTS.rttm.baseWs, ENDPOINTS.rttm.wsDlq),
+        WebSocketCtor: WebSocket,
         deserializer: (event) => JSON.parse((event as MessageEvent).data)
       });
     }

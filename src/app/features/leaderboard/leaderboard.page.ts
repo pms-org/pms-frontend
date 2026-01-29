@@ -1,13 +1,15 @@
 import { Component, signal, ViewChild, ElementRef, AfterViewInit, effect, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { LeaderboardTableComponent } from './components/leaderboard-table.component';
 import { Portfolio } from '../../core/models/leaderboard.models';
 import { LeaderboardApiService } from '../../core/services/leaderboard-api.service';
 import { LeaderboardWsService } from '../../core/services/leaderboard-ws.service';
 import { ConnectionStatusService } from '../../core/services/connection-status.service';
+import { PortfolioApiService } from '../../core/services/portfolio-api.service';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
 
 Chart.register(...registerables);
 
@@ -28,6 +30,8 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
   private leaderboardApi = inject(LeaderboardApiService);
   private leaderboardWs = inject(LeaderboardWsService);
   private connectionStatus = inject(ConnectionStatusService);
+  private portfolioApi = inject(PortfolioApiService);
+  private http = inject(HttpClient);
   private wsSubscription?: Subscription;
 
   portfolios = signal<Portfolio[]>([]);
@@ -211,9 +215,25 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
     })) || [];
     
     console.log('Converted portfolios:', portfolios);
-    this.portfolios.set(portfolios);
-    this.applyFilters();
-    if (portfolios.length > 0) this.selectedPortfolio.set(portfolios[0]);
+    
+    // Fetch portfolio names
+    this.portfolioApi.getAllPortfolios().subscribe({
+      next: investors => {
+        const portfoliosWithNames = portfolios.map(p => {
+          const investor = investors.find(inv => inv.portfolioId === p.portfolioId);
+          return { ...p, name: investor?.name };
+        });
+        this.portfolios.set(portfoliosWithNames);
+        this.applyFilters();
+        if (portfoliosWithNames.length > 0) this.selectedPortfolio.set(portfoliosWithNames[0]);
+      },
+      error: err => {
+        console.error('Error fetching portfolio names:', err);
+        this.portfolios.set(portfolios);
+        this.applyFilters();
+        if (portfolios.length > 0) this.selectedPortfolio.set(portfolios[0]);
+      }
+    });
   }
 
   private handleWsResponse(data: any) {
@@ -255,7 +275,7 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
         rank: newRank,
         prevRank: existing?.rank,
         portfolioId: item.portfolioId,
-        name: item.portfolioName,
+        name: existing?.name || item.portfolioName,
         compositeScore: newScore,
         prevCompositeScore: prevScore,
         scoreDirection: direction,
@@ -268,10 +288,38 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
     });
     
     console.log('Converted portfolios from WS:', portfolios);
-    this.portfolios.set(portfolios);
-    this.applyFilters();
-    if (portfolios.length > 0 && !this.selectedPortfolio()) {
-      this.selectedPortfolio.set(portfolios[0]);
+    
+    // Fetch names for portfolios that don't have them
+    const portfoliosWithoutNames = portfolios.filter(p => !p.name);
+    if (portfoliosWithoutNames.length > 0) {
+      this.portfolioApi.getAllPortfolios().subscribe({
+        next: investors => {
+          const portfoliosWithNames = portfolios.map(p => {
+            if (p.name) return p;
+            const investor = investors.find(inv => inv.portfolioId === p.portfolioId);
+            return { ...p, name: investor?.name };
+          });
+          this.portfolios.set(portfoliosWithNames);
+          this.applyFilters();
+          if (portfoliosWithNames.length > 0 && !this.selectedPortfolio()) {
+            this.selectedPortfolio.set(portfoliosWithNames[0]);
+          }
+        },
+        error: err => {
+          console.error('Error fetching portfolio names:', err);
+          this.portfolios.set(portfolios);
+          this.applyFilters();
+          if (portfolios.length > 0 && !this.selectedPortfolio()) {
+            this.selectedPortfolio.set(portfolios[0]);
+          }
+        }
+      });
+    } else {
+      this.portfolios.set(portfolios);
+      this.applyFilters();
+      if (portfolios.length > 0 && !this.selectedPortfolio()) {
+        this.selectedPortfolio.set(portfolios[0]);
+      }
     }
   }
 

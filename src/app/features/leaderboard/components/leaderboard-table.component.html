@@ -92,6 +92,7 @@
         <tr class="border-b border-gray-800">
           <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Rank</th>
           <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Portfolio ID</th>
+          <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Name</th>
           <th class="text-right py-3 px-4 text-sm font-medium text-gray-400">Composite Score</th>
           <th class="text-right py-3 px-4 text-sm font-medium text-gray-400">Avg Return</th>
           <th class="text-right py-3 px-4 text-sm font-medium text-gray-400">Sharpe</th>
@@ -120,6 +121,11 @@
             <div class="text-white font-mono text-sm">{{ portfolio.portfolioId }}</div>
           </td>
 
+          <!-- Name -->
+          <td class="py-4 px-4">
+            <div class="text-white text-sm">{{ portfolio.name || 'N/A' }}</div>
+          </td>
+
           <!-- Composite Score -->
           <td class="py-4 px-4 text-right text-white font-medium">
             <span class="inline-flex items-center gap-1">
@@ -141,12 +147,12 @@
 
           <!-- Sharpe -->
           <td class="py-4 px-4 text-right text-white font-medium">
-            {{ portfolio.sharpe || 'N/A' }}
+            {{ portfolio.sharpe ? (+portfolio.sharpe).toFixed(2) : 'N/A' }}
           </td>
 
           <!-- Sortino -->
           <td class="py-4 px-4 text-right text-white font-medium">
-            {{ portfolio.sortino || 'N/A' }}
+            {{ portfolio.sortino ? (+portfolio.sortino).toFixed(2) : 'N/A' }}
           </td>
 
 

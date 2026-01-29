@@ -17,6 +17,7 @@ export class LeaderboardWsService {
       
       this.socket$ = webSocket<any>({
         url,
+        WebSocketCtor: WebSocket,
         openObserver: {
           next: () => {
             this.logger.info('WebSocket connected successfully');

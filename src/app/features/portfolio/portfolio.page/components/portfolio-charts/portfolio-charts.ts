@@ -46,18 +46,30 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
           chartsInitialized: this.chartsInitialized.donut,
           canvasExists: !!this.sectorCanvasRef?.nativeElement
         });
-        this.initializeChartIfReady('donut');
+        if (this.viewReady && this.chartsInitialized.donut) {
+          this.syncDonut(this.sectors);
+        } else {
+          this.initializeChartIfReady('donut');
+        }
       }
     }
     
     if (changes['liveTrend'] && this.liveTrend?.length > 0) {
       console.log('📈 Live trend changed:', this.liveTrend.length, 'points');
-      this.initializeChartIfReady('live');
+      if (this.viewReady && this.chartsInitialized.live) {
+        this.syncLiveChart(this.liveTrend);
+      } else {
+        this.initializeChartIfReady('live');
+      }
     }
     
     if (changes['historyTrend'] && this.historyTrend?.length > 0) {
       console.log('📉 History trend changed:', this.historyTrend.length, 'points');
-      this.initializeChartIfReady('history');
+      if (this.viewReady && this.chartsInitialized.history) {
+        this.syncHistoryChart(this.historyTrend);
+      } else {
+        this.initializeChartIfReady('history');
+      }
     }
   }
 
@@ -142,6 +154,11 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
     this.initializeChartIfReady('history');
   }
 
+  onSectorClick(sector: string): void {
+    console.log('🎯 Sector clicked:', sector);
+    this.sectorClicked.emit(sector);
+  }
+
   private syncDonut(sectors: PortfolioSectorSlice[]) {
     const canvas = this.sectorCanvasRef?.nativeElement;
     console.log('🍩 syncDonut called:', { canvas: !!canvas, sectorsLength: sectors.length, sectors });
@@ -175,7 +192,15 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
       options: {
         responsive: true, 
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } }
+        plugins: { legend: { display: false } },
+        onClick: (event, elements) => {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            const sector = sectors[index].sector;
+            console.log('🎯 Chart clicked, sector:', sector);
+            this.onSectorClick(sector);
+          }
+        }
       }
     });
     
@@ -184,79 +209,95 @@ export class PortfolioChartsComponent implements AfterViewInit, OnDestroy, OnCha
 
   private syncLiveChart(trend: PnlTrendPoint[]) {
     const canvas = this.liveCanvasRef?.nativeElement;
+    console.log('📈 syncLiveChart called:', { canvas: !!canvas, trendLength: trend.length });
+    
     if (!canvas || trend.length === 0) return;
     
-    this.liveChart?.destroy();
-    
-    this.liveChart = new Chart(canvas, {
-      type: 'line',
-      data: { 
-        labels: trend.map(t => t.label), 
-        datasets: [{ 
-          label: 'Real-Time PnL', 
-          data: trend.map(t => t.value), 
-          borderColor: '#10b981', 
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          tension: 0.4,
-          fill: true,
-          pointRadius: 3,
-          pointHoverRadius: 5
-        }] 
-      },
-      options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        plugins: { legend: { display: false } },
-        scales: {
-          y: {
-            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-            ticks: { color: '#9ca3af' }
-          },
-          x: {
-            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-            ticks: { color: '#9ca3af' }
+    if (!this.liveChart) {
+      console.log('✨ Creating new live chart');
+      this.liveChart = new Chart(canvas, {
+        type: 'line',
+        data: { 
+          labels: trend.map(t => t.label), 
+          datasets: [{ 
+            label: 'Real-Time PnL', 
+            data: trend.map(t => t.value), 
+            borderColor: '#10b981', 
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          }] 
+        },
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false, 
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.1)' },
+              ticks: { color: '#9ca3af' }
+            },
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.1)' },
+              ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 }
+            }
           }
         }
-      }
-    });
+      });
+    } else {
+      console.log('🔄 Updating existing live chart with', trend.length, 'points');
+      this.liveChart.data.labels = trend.map(t => t.label);
+      this.liveChart.data.datasets[0].data = trend.map(t => t.value);
+      this.liveChart.update('none');
+    }
   }
 
   private syncHistoryChart(trend: PnlTrendPoint[]) {
     const canvas = this.historyCanvasRef?.nativeElement;
+    console.log('📉 syncHistoryChart called:', { canvas: !!canvas, trendLength: trend.length });
+    
     if (!canvas || trend.length === 0) return;
     
-    this.historyChart?.destroy();
-    
-    this.historyChart = new Chart(canvas, {
-      type: 'line',
-      data: { 
-        labels: trend.map(t => t.label), 
-        datasets: [{ 
-          label: 'Portfolio Value', 
-          data: trend.map(t => t.value), 
-          borderColor: '#3b82f6', 
-          fill: true, 
-          backgroundColor: 'rgba(59,130,246,0.1)',
-          tension: 0.3,
-          pointRadius: 2,
-          pointHoverRadius: 4
-        }] 
-      },
-      options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        plugins: { legend: { display: false } },
-        scales: {
-          y: {
-            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-            ticks: { color: '#9ca3af' }
-          },
-          x: {
-            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-            ticks: { color: '#9ca3af' }
+    if (!this.historyChart) {
+      console.log('✨ Creating new history chart');
+      this.historyChart = new Chart(canvas, {
+        type: 'line',
+        data: { 
+          labels: trend.map(t => t.label), 
+          datasets: [{ 
+            label: 'Portfolio Value', 
+            data: trend.map(t => t.value), 
+            borderColor: '#3b82f6', 
+            fill: true, 
+            backgroundColor: 'rgba(59,130,246,0.1)',
+            tension: 0.3,
+            pointRadius: 2,
+            pointHoverRadius: 4
+          }] 
+        },
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false, 
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.1)' },
+              ticks: { color: '#9ca3af' }
+            },
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.1)' },
+              ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 }
+            }
           }
         }
-      }
-    });
+      });
+    } else {
+      console.log('🔄 Updating existing history chart with', trend.length, 'points');
+      this.historyChart.data.labels = trend.map(t => t.label);
+      this.historyChart.data.datasets[0].data = trend.map(t => t.value);
+      this.historyChart.update('none');
+    }
   }
 }

@@ -12,6 +12,7 @@ export class RttmWsTelemetryService {
     if (!this.socket$) {
       this.socket$ = webSocket<TelemetryMessage>({
         url: wsUrl(ENDPOINTS.rttm.baseWs, ENDPOINTS.rttm.wsTelemetrySnapshot),
+        WebSocketCtor: WebSocket,
         deserializer: (event) => JSON.parse((event as MessageEvent).data)
       });
     }
