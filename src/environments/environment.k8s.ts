@@ -1,23 +1,26 @@
+// Runtime configuration loaded from window.__ENV__ (injected by Kubernetes ConfigMap)
+// This file is used for Kubernetes deployments - all values come from Helm templates
+const runtimeEnv = (window as any).__ENV__ || {};
+
 export const environment = {
   production: true,
-  analytics: {
-    baseHttp: 'http://analytics-service:8082',
-    baseWs: 'ws://analytics-service:8082',
+  apiGateway: {
+    baseHttp: runtimeEnv.API_GATEWAY_HTTP || 'http://apigateway',
+    baseWs: runtimeEnv.API_GATEWAY_WS || 'ws://apigateway',
   },
-  leaderboard: {
-    baseHttp: 'http://leaderboard-service:8000',
-    baseWs: 'ws://leaderboard-service:8000',
-  },
-  rttm: {
-    baseHttp: 'http://rttm-service:8085',
-    baseWs: 'ws://rttm-service:8085',
+  auth: {
+    baseHttp: runtimeEnv.AUTH_HTTP || 'http://auth',
   },
   portfolio: {
-    baseHttp: 'http://portfolio-service:8084',
-    baseWs: 'ws://portfolio-service:8084',
+    baseHttp: runtimeEnv.PORTFOLIO_HTTP || 'http://portfolio',
+    baseWs: runtimeEnv.PORTFOLIO_WS || 'ws://portfolio',
   },
-  apiGateway: {
-    baseHttp: 'http://api-gateway-service:8080',
-    baseWs: 'ws://api-gateway-service:8080',
-  }
+  analytics: {
+    baseHttp: runtimeEnv.ANALYTICS_HTTP || 'http://analytics',
+    baseWs: runtimeEnv.ANALYTICS_WS || 'ws://analytics',
+  },
+  leaderboard: {
+    baseHttp: runtimeEnv.LEADERBOARD_HTTP || 'http://leaderboard',
+    baseWs: runtimeEnv.LEADERBOARD_WS || 'ws://leaderboard',
+  },
 };
