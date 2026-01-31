@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { RuntimeConfigService } from './runtime-config.service';
 
 export interface AuthRequest {
   username: string;
@@ -19,7 +19,8 @@ export interface AuthResponse {
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = environment.auth.baseHttp;
+  private readonly runtimeConfig = inject(RuntimeConfigService);
+  private readonly baseUrl = this.runtimeConfig.auth.baseHttp;
 
   login(credentials: AuthRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/api/auth/login`, credentials);

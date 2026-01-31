@@ -2,14 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AnalysisEntityDto, SectorMetricsDto, SymbolMetricsDto } from '../models/analytics.models';
-import { ENDPOINTS, httpUrl } from '../config/endpoints';
+import { RuntimeConfigService } from './runtime-config.service';
 import { LoggerService } from './logger.service';
 
 // Interface needed for Chart 3
 export interface PortfolioValueHistoryDto {
   id: string;
   portfolioId: string;
-  date: string; 
+  date: string;
   portfolioValue: number;
   createdAt: string;
   updatedAt: string;
@@ -21,49 +21,41 @@ export interface PortfolioValueHistoryDto {
 export class AnalyticsApiService {
   private readonly http = inject(HttpClient);
   private readonly logger = inject(LoggerService);
-  // Using empty string to force proxy usage
-  private readonly baseUrl = ENDPOINTS.analytics.baseHttp; 
+  private readonly runtimeConfig = inject(RuntimeConfigService);
+  private readonly baseUrl = this.runtimeConfig.analytics.baseHttp;
 
   getAnalysisAll(): Observable<AnalysisEntityDto[]> {
-    return this.http.get<AnalysisEntityDto[]>(
-      httpUrl(this.baseUrl, ENDPOINTS.analytics.analysisAll)
-    );
+    return this.http.get<AnalysisEntityDto[]>(`${this.baseUrl}/api/analysis/all`);
   }
 
   getSectorOverall(): Observable<SectorMetricsDto[]> {
-    return this.http.get<SectorMetricsDto[]>(
-      httpUrl(this.baseUrl, ENDPOINTS.analytics.sectorOverall)
-    );
+    return this.http.get<SectorMetricsDto[]>(`${this.baseUrl}/api/sectors/overall`);
   }
 
   triggerUnrealizedPnlCalc(): Observable<void> {
-    return this.http.get<void>(
-      httpUrl(this.baseUrl, ENDPOINTS.analytics.initialUnrealizedPnl)
-    );
+    return this.http.get<void>(`${this.baseUrl}/api/analytics/initial-unrealized-pnl`);
   }
 
   getPortfolioSectorAnalysis(portfolioId: string): Observable<SectorMetricsDto[]> {
-    const url = httpUrl(this.baseUrl, ENDPOINTS.analytics.portfolioSector(portfolioId));
+    const url = `${this.baseUrl}/api/sectors/portfolio-wise/${portfolioId}`;
     this.logger.info('API Call: Portfolio sector analysis', { portfolioId, url });
     return this.http.get<SectorMetricsDto[]>(url);
   }
 
   getSectorDrilldown(sector: string): Observable<SymbolMetricsDto[]> {
-    return this.http.get<SymbolMetricsDto[]>(
-      httpUrl(this.baseUrl, ENDPOINTS.analytics.sectorDrilldown(sector))
-    );
+    return this.http.get<SymbolMetricsDto[]>(`${this.baseUrl}/api/sectors/sector-wise/${sector}`);
   }
 
   getPortfolioSectorDrilldown(portfolioId: string, sector: string): Observable<SymbolMetricsDto[]> {
     return this.http.get<SymbolMetricsDto[]>(
-      httpUrl(this.baseUrl, ENDPOINTS.analytics.portfolioSectorDrilldown(portfolioId, sector))
+      `${this.baseUrl}/api/sectors/portfolio-wise/${portfolioId}/sector-wise/${sector}`,
     );
   }
 
   // The Missing Method causing your error
   getPortfolioHistory(portfolioId: string): Observable<PortfolioValueHistoryDto[]> {
     return this.http.get<PortfolioValueHistoryDto[]>(
-      httpUrl(this.baseUrl, ENDPOINTS.analytics.portfolioHistory(portfolioId))
+      `${this.baseUrl}/api/portfolio_value/history/${portfolioId}`,
     );
   }
 }
