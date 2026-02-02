@@ -1,7 +1,12 @@
+// NOTE: This file now uses environment imports as fallback.
+// The actual runtime configuration is injected via RuntimeConfigService
+// which reads from window.__ENV__ (set by env.js)
+
 import { environment } from '../../../environments/environment';
 
 export const ENDPOINTS = {
   analytics: {
+    // These will be overridden by RuntimeConfigService at runtime
     baseHttp: environment.analytics.baseHttp,
     baseWs: environment.analytics.baseWs,
 
@@ -11,7 +16,8 @@ export const ENDPOINTS = {
     initialUnrealizedPnl: '/api/analytics/initial-unrealized-pnl',
     portfolioSector: (portfolioId: string) => `/api/sectors/portfolio-wise/${portfolioId}`,
     sectorDrilldown: (sector: string) => `/api/sectors/sector-wise/${sector}`,
-    portfolioSectorDrilldown: (portfolioId: string, sector: string) => `/api/sectors/portfolio-wise/${portfolioId}/sector-wise/${sector}`,
+    portfolioSectorDrilldown: (portfolioId: string, sector: string) =>
+      `/api/sectors/portfolio-wise/${portfolioId}/sector-wise/${sector}`,
     portfolioHistory: (portfolioId: string) => `/api/portfolio_value/history/${portfolioId}`,
 
     // WS - SockJS needs HTTP URL
@@ -49,7 +55,7 @@ export const ENDPOINTS = {
     wsMetrics: '/ws/rttm/metrics', // emits real-time metrics
     wsPipeline: '/ws/rttm/pipeline', // emits pipeline updates
     wsTelemetrySnapshot: '/ws/rttm/telemetry', // emits Alert[]
-    wsDlq: '/ws/rttm/dlq',    // emits DLQResponse[]
+    wsDlq: '/ws/rttm/dlq', // emits DLQResponse[]
     wsAlerts: '/ws/rttm/alerts', // emits Alert[]
   },
 };
