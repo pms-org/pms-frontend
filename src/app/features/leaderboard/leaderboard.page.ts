@@ -166,7 +166,11 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
           },
           error: err => {
             console.error('Error loading around data:', err);
-            this.handleMockData();
+            if (err.status === 500 || err.status === 404) {
+              alert('Portfolio not found in leaderboard or invalid portfolio ID. Please check the ID and try again.');
+            }
+            this.portfolios.set([]);
+            this.filteredPortfolios.set([]);
           }
         });
       }

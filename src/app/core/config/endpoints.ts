@@ -14,7 +14,7 @@ export const ENDPOINTS = {
     portfolioSectorDrilldown: (portfolioId: string, sector: string) => `/api/sectors/portfolio-wise/${portfolioId}/sector-wise/${sector}`,
     portfolioHistory: (portfolioId: string) => `/api/portfolio_value/history/${portfolioId}`,
 
-    // WS
+    // WS - SockJS needs HTTP URL
     wsEndpoint: `${environment.analytics.baseWs}/ws`,
     topicPositions: '/topic/position-update',
     topicUnrealised: '/topic/unrealized-pnl',
