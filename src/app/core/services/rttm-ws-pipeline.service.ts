@@ -1,19 +1,20 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, share } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { ENDPOINTS, wsUrl } from '../config/endpoints';
+import { RuntimeConfigService } from './runtime-config.service';
 import { PipelineStage } from '../models/rttm.models';
 
 @Injectable({ providedIn: 'root' })
 export class RttmWsPipelineService {
+  private readonly runtimeConfig = inject(RuntimeConfigService);
   private socket$?: WebSocketSubject<PipelineStage[]>;
 
   stream(): Observable<PipelineStage[]> {
     if (!this.socket$) {
       this.socket$ = webSocket<PipelineStage[]>({
-        url: wsUrl(ENDPOINTS.rttm.baseWs, ENDPOINTS.rttm.wsPipeline),
+        url: `${this.runtimeConfig.rttm.baseWs}/ws/rttm/pipeline`,
         WebSocketCtor: WebSocket,
-        deserializer: (event) => JSON.parse((event as MessageEvent).data)
+        deserializer: (event) => JSON.parse((event as MessageEvent).data),
       });
     }
     return this.socket$.pipe(share());

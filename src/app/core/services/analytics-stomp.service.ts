@@ -23,9 +23,9 @@
 //     this.unrealisedSubject.asObservable();
 
 //   connect(): void {
-//     if (this.connectedSubject.value) return; 
+//     if (this.connectedSubject.value) return;
 
-//     const sockJsUrl = ENDPOINTS.analytics.wsEndpoint; 
+//     const sockJsUrl = ENDPOINTS.analytics.wsEndpoint;
 
 //     this.client = new Client({
 //       webSocketFactory: () => new SockJS(sockJsUrl),
@@ -98,15 +98,12 @@
 //   }
 // }
 
-
-
-
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-import { ENDPOINTS } from '../config/endpoints';
+import { RuntimeConfigService } from './runtime-config.service';
 import { AnalysisEntityDto, UnrealisedPnlWsDto } from '../models/analytics.models';
 import { LoggerService } from './logger.service';
 
@@ -114,6 +111,7 @@ import { LoggerService } from './logger.service';
 export class AnalyticsStompService {
   private client?: Client;
   private readonly logger = inject(LoggerService);
+  private readonly runtimeConfig = inject(RuntimeConfigService);
 
   private readonly connectedSubject = new BehaviorSubject<boolean>(false);
   readonly connected$ = this.connectedSubject.asObservable();
@@ -130,7 +128,7 @@ export class AnalyticsStompService {
       return;
     }
 
-    const sockJsUrl = ENDPOINTS.analytics.wsEndpoint; 
+    const sockJsUrl = `${this.runtimeConfig.analytics.baseWs}/ws`;
     this.logger.info('Connecting to STOMP', { url: sockJsUrl });
 
     this.client = new Client({
@@ -147,12 +145,12 @@ export class AnalyticsStompService {
 
       setTimeout(() => {
         this.logger.info('Subscribing to topics');
-        this.client?.subscribe(ENDPOINTS.analytics.topicPositions, (msg: IMessage) => {
+        this.client?.subscribe('/topic/position-update', (msg: IMessage) => {
           try {
             const raw = JSON.parse(msg.body);
             this.logger.debug('Position update received', raw);
             if (Array.isArray(raw)) {
-              raw.forEach(item => this.positionUpdateSubject.next(this.normalizePosition(item)));
+              raw.forEach((item) => this.positionUpdateSubject.next(this.normalizePosition(item)));
             } else {
               this.positionUpdateSubject.next(this.normalizePosition(raw));
             }
@@ -161,12 +159,12 @@ export class AnalyticsStompService {
           }
         });
 
-        this.client?.subscribe(ENDPOINTS.analytics.topicUnrealised, (msg: IMessage) => {
+        this.client?.subscribe('/topic/unrealized-pnl', (msg: IMessage) => {
           try {
             const raw = JSON.parse(msg.body);
             this.logger.debug('Unrealized PnL received', raw);
             if (Array.isArray(raw)) {
-              const normalized = raw.map(item => this.normalizeUnrealised(item));
+              const normalized = raw.map((item) => this.normalizeUnrealised(item));
               this.unrealisedSubject.next(normalized);
             } else {
               this.unrealisedSubject.next([this.normalizeUnrealised(raw)]);

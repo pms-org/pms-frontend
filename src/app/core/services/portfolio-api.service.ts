@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { RuntimeConfigService } from './runtime-config.service';
 
 export interface InvestorDto {
   portfolioId: string;
@@ -15,7 +15,8 @@ export interface InvestorDto {
 })
 export class PortfolioApiService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = environment.portfolio.baseHttp;
+  private readonly runtimeConfig = inject(RuntimeConfigService);
+  private readonly baseUrl = this.runtimeConfig.portfolio.baseHttp;
 
   getAllPortfolios(): Observable<InvestorDto[]> {
     return this.http.get<InvestorDto[]>(`${this.baseUrl}/api/portfolio/all`);
