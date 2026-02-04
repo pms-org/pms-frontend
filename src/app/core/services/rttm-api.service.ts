@@ -4,6 +4,16 @@ import { Observable } from 'rxjs';
 import { MetricCard, PipelineStage, DLQResponse, TelemetrySnapshot } from '../models/rttm.models';
 import { RuntimeConfigService } from './runtime-config.service';
 
+export interface TradeEvent {
+  id: number;
+  tradeId: string;
+  serviceName: string;
+  eventStage: string;
+  eventTime: string;
+  message: string;
+  sourceTable: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -26,6 +36,12 @@ export class RttmApiService {
   getTelemetrySnapshot(): Observable<TelemetrySnapshot> {
     return this.http.get<TelemetrySnapshot>(
       `${this.runtimeConfig.rttm.baseHttp}/api/rttm/telemetry-snapshot`,
+    );
+  }
+
+  trackTrade(tradeId: string): Observable<TradeEvent[]> {
+    return this.http.get<TradeEvent[]>(
+      `${this.runtimeConfig.rttm.baseHttp}/api/rttm/track-trade?tradeId=${tradeId}`
     );
   }
 }

@@ -21,6 +21,8 @@ import { PipelineFlowComponent } from './components/pipeline-flow.component';
 import { ChartsComponent } from './components/charts.component';
 import { DlqPanelComponent } from './components/dlq-panel.component';
 import { AlertsPanelComponent } from './components/alerts-panel.component';
+import { Summary24hComponent } from './components/summary-24h.component';
+import { TradeSearchComponent } from './components/trade-search.component';
 
 @Component({
   selector: 'app-rttm',
@@ -32,6 +34,8 @@ import { AlertsPanelComponent } from './components/alerts-panel.component';
     ChartsComponent,
     DlqPanelComponent,
     AlertsPanelComponent,
+    Summary24hComponent,
+    TradeSearchComponent,
   ],
   templateUrl: './rttm.page.html',
   styleUrls: ['./rttm.page.css'],

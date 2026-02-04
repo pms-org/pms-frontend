@@ -13,7 +13,7 @@ export const MOCK_RTTM_DATA: RttmData = {
     { name: 'VALIDATED', count: 12430, latencyMs: 18, successRate: 99.5 },
     { name: 'ENRICHED', count: 12380, latencyMs: 35, successRate: 99.2 },
     { name: 'COMMITTED', count: 12350, latencyMs: 28, successRate: 99.7 },
-    { name: 'ANALYZED', count: 12340, latencyMs: 22, successRate: 99.9 }
+
   ],
   tpsTrend: [1100, 1150, 1200, 1180, 1220, 1250, 1240, 1260, 1247],
   latencyMetrics: [

@@ -2,19 +2,20 @@
 
 /* Custom scrollbar */
 .overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-track {
   background: rgba(31, 41, 55, 0.5);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
   background: rgba(75, 85, 99, 0.8);
-  border-radius: 3px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 1);
+  background: rgba(107, 114, 128, 0.9);
 }

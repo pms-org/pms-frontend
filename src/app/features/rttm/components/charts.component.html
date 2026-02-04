@@ -9,7 +9,10 @@
 
   <!-- Latency Metrics -->
   <div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
-    <h3 class="text-sm font-medium text-gray-400 mb-4">Latency Metrics</h3>
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-sm font-medium text-gray-400">Latency Metrics</h3>
+      <span class="text-xs text-gray-500">Based on COMMITTED stage</span>
+    </div>
     <div class="w-full">
       <canvas #latencyCanvas></canvas>
     </div>

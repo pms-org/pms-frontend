@@ -99,8 +99,8 @@ export class RuntimeConfigService {
         baseWs: 'ws://localhost:8088',
       },
       rttm: {
-        baseHttp: 'http://localhost:8088',
-        baseWs: 'ws://localhost:8088',
+        baseHttp: 'http://localhost:8082',
+        baseWs: 'ws://localhost:8082',
       },
       portfolio: {
         baseHttp: 'http://localhost:8088',

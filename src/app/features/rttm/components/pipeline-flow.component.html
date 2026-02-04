@@ -9,11 +9,12 @@
         <div class="space-y-2 text-sm">
           <div class="flex justify-between">
             <span class="text-gray-400">Count:</span>
-            <span class="text-white font-medium">{{ stage.count }}</span>
+            <span class="text-white font-medium hover-value" [attr.data-tooltip]="'Only valid ' + stage.name.toLowerCase() + ' trades'">{{ stage.count }}</span>
           </div>
-          <div class="flex justify-between">
+          <div class="flex justify-between" *ngIf="stage.latencyMs !== undefined">
             <span class="text-gray-400">Latency:</span>
-            <span class="text-white font-medium">{{ stage.latencyMs }}ms</span>
+            <span class="text-white font-medium" *ngIf="stage.name === 'RECEIVED'">-</span>
+            <span class="text-white font-medium hover-value" *ngIf="stage.name !== 'RECEIVED'" [attr.data-tooltip]="i > 0 ? stages()[i-1].name + ' → ' + stage.name + ' stage' : stage.name + ' stage'">{{ stage.latencyMs }}ms</span>
           </div>
           <div class="flex justify-between">
             <span class="text-gray-400">Success:</span>

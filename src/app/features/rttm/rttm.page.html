@@ -1,10 +1,20 @@
 <div class="min-h-screen bg-gray-950 p-6">
+  <!-- Header with 24h Summary -->
+  <div class="flex justify-end mb-6">
+    <app-summary-24h />
+  </div>
+
   <!-- KPI Metrics -->
   <app-metric-cards [metrics]="data().metrics" />
 
   <!-- Pipeline Flow -->
   <div class="mt-6">
     <app-pipeline-flow [stages]="data().pipeline" />
+  </div>
+
+  <!-- Trade Search -->
+  <div class="mt-6">
+    <app-trade-search />
   </div>
 
   <!-- Charts Row -->

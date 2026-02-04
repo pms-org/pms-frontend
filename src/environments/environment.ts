@@ -9,7 +9,7 @@ export const environment = {
     baseWs: 'ws://localhost:8000',
   },
   rttm: {
-    baseHttp: 'http://localhost:8080',
+    baseHttp: 'http://localhost:8082',
     baseWs: 'ws://localhost:8087',
   },
   portfolio: {
