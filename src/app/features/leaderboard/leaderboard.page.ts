@@ -62,8 +62,6 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
 
   ngOnInit() {
     this.connectionStatus.setDisconnected();
-    console.log('LeaderboardPage initialized');
-    console.log('Current endpoint option:', this.endpointOption());
     this.loadData();
   }
 
@@ -114,27 +112,21 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
 
   private loadData() {
     const option = this.endpointOption();
-    console.log('Loading data for option:', option);
     
     if (option === 'all') {
       // Try WebSocket first, fallback to HTTP API
       this.wsSubscription = this.leaderboardWs.stream().subscribe({
         next: data => {
           this.connectionStatus.setWebSocketConnected();
-          console.log('WebSocket data received:', JSON.stringify(data, null, 2));
           this.handleWsResponse(data);
         },
         error: err => {
-          console.error('WebSocket error, falling back to HTTP API:', err);
           this.connectionStatus.setApiConnected();
-          // Fallback to HTTP API instead of mock data
           this.leaderboardApi.getTopPerformers().subscribe({
             next: data => {
-              console.log('Fallback HTTP data:', data);
               this.handleApiResponse(data);
             },
             error: httpErr => {
-              console.error('HTTP API also failed:', httpErr);
               this.handleMockData();
             }
           });
@@ -147,11 +139,9 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
         const topValue = this.topValue();
         this.leaderboardApi.getTopPerformers(topValue).subscribe({
           next: data => {
-            console.log('Top performers data:', data);
             this.handleApiResponse(data);
           },
           error: err => {
-            console.error('Error loading top performers:', err);
             this.handleMockData();
           }
         });
@@ -161,11 +151,9 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
         const range = this.range();
         this.leaderboardApi.getRankingsAround(portfolioId, range).subscribe({
           next: data => {
-            console.log('Around data:', data);
             this.handleApiResponse(data);
           },
           error: err => {
-            console.error('Error loading around data:', err);
             if (err.status === 500 || err.status === 404) {
               alert('Portfolio not found in leaderboard or invalid portfolio ID. Please check the ID and try again.');
             }
@@ -206,8 +194,6 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
   }
 
   private handleApiResponse(data: any) {
-    console.log('Raw API response:', data);
-    // Convert API response to Portfolio format
     const portfolios: Portfolio[] = data.top?.map((item: any) => ({
       rank: item.rank,
       portfolioId: item.portfolioId,
@@ -217,8 +203,6 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
       sortino: item.sortino,
       updatedAt: item.updatedAt
     })) || [];
-    
-    console.log('Converted portfolios:', portfolios);
     
     // Fetch portfolio names
     this.portfolioApi.getAllPortfolios().subscribe({
@@ -232,7 +216,6 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
         if (portfoliosWithNames.length > 0) this.selectedPortfolio.set(portfoliosWithNames[0]);
       },
       error: err => {
-        console.error('Error fetching portfolio names:', err);
         this.portfolios.set(portfolios);
         this.applyFilters();
         if (portfolios.length > 0) this.selectedPortfolio.set(portfolios[0]);
@@ -241,7 +224,6 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
   }
 
   private handleWsResponse(data: any) {
-    console.log('Raw WebSocket response:', data);
     let entriesArray: any[] = [];
     
     if (Array.isArray(data)) {
@@ -253,7 +235,6 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
     } else if (data.portfolios && Array.isArray(data.portfolios)) {
       entriesArray = data.portfolios;
     } else {
-      console.warn('WebSocket data is not in expected format:', data);
       return;
     }
     
@@ -273,8 +254,6 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
         direction = newScore > prevScore ? 'up' : 'down';
       }
       
-      console.log(`Portfolio ${item.portfolioId}: rank ${existing?.rank} -> ${newRank}, score ${prevScore} -> ${newScore}, direction: ${direction}`);
-      
       return {
         rank: newRank,
         prevRank: existing?.rank,
@@ -290,8 +269,6 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
         updatedAt: data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString()
       };
     });
-    
-    console.log('Converted portfolios from WS:', portfolios);
     
     // Fetch names for portfolios that don't have them
     const portfoliosWithoutNames = portfolios.filter(p => !p.name);
@@ -310,7 +287,6 @@ export class LeaderboardPage implements AfterViewInit, OnInit, OnDestroy {
           }
         },
         error: err => {
-          console.error('Error fetching portfolio names:', err);
           this.portfolios.set(portfolios);
           this.applyFilters();
           if (portfolios.length > 0 && !this.selectedPortfolio()) {
