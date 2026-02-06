@@ -6,7 +6,7 @@ import { RuntimeConfigService } from './runtime-config.service';
 export interface InvestorDto {
   portfolioId: string;
   name: string;
-  phoneNumber: number;
+  phoneNumber: string;
   address: string;
 }
 

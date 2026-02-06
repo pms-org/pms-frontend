@@ -143,7 +143,12 @@ export class AnalyticsStompService {
       this.logger.info('STOMP Connected');
       this.connectedSubject.next(true);
 
-      this.client?.subscribe('/topic/position-update', (msg: IMessage) => {
+      if (!this.client?.connected) {
+        this.logger.warn('Client not in connected state, skipping subscriptions');
+        return;
+      }
+
+      this.client.subscribe('/topic/position-update', (msg: IMessage) => {
         try {
           const raw = JSON.parse(msg.body);
           this.logger.debug('Position update received', raw);
@@ -157,7 +162,7 @@ export class AnalyticsStompService {
         }
       });
 
-      this.client?.subscribe('/topic/unrealized-pnl', (msg: IMessage) => {
+      this.client.subscribe('/topic/unrealized-pnl', (msg: IMessage) => {
         try {
           const raw = JSON.parse(msg.body);
           this.logger.debug('Unrealized PnL received', raw);
@@ -190,7 +195,9 @@ export class AnalyticsStompService {
   }
 
   disconnect(): void {
-    this.client?.deactivate();
+    if (this.client?.connected) {
+      this.client.deactivate();
+    }
     this.connectedSubject.next(false);
   }
 
