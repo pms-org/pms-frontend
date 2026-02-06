@@ -39,7 +39,7 @@ export class ChartsComponent implements AfterViewInit {
   }
 
   private updateTpsChart(data: number[]) {
-    if (!this.viewReady) return;
+    if (!this.viewReady || !data) return;
 
     if (!this.tpsChart) {
       const config: ChartConfiguration<'line'> = {
@@ -75,7 +75,7 @@ export class ChartsComponent implements AfterViewInit {
   }
 
   private updateLatencyChart(data: { label: string; value: number }[]) {
-    if (!this.viewReady) return;
+    if (!this.viewReady || !data) return;
 
     if (!this.latencyChart) {
       const config: ChartConfiguration<'bar'> = {
@@ -108,7 +108,7 @@ export class ChartsComponent implements AfterViewInit {
   }
 
   private updateKafkaChart(data: { partition: string; lag: number }[]) {
-    if (!this.viewReady) return;
+    if (!this.viewReady || !data) return;
 
     if (!this.kafkaChart) {
       const config: ChartConfiguration<'bar'> = {
