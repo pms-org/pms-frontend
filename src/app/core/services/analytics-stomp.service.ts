@@ -143,37 +143,34 @@ export class AnalyticsStompService {
       this.logger.info('STOMP Connected');
       this.connectedSubject.next(true);
 
-      setTimeout(() => {
-        this.logger.info('Subscribing to topics');
-        this.client?.subscribe('/topic/position-update', (msg: IMessage) => {
-          try {
-            const raw = JSON.parse(msg.body);
-            this.logger.debug('Position update received', raw);
-            if (Array.isArray(raw)) {
-              raw.forEach((item) => this.positionUpdateSubject.next(this.normalizePosition(item)));
-            } else {
-              this.positionUpdateSubject.next(this.normalizePosition(raw));
-            }
-          } catch (e) {
-            this.logger.error('Error parsing position update', e);
+      this.client?.subscribe('/topic/position-update', (msg: IMessage) => {
+        try {
+          const raw = JSON.parse(msg.body);
+          this.logger.debug('Position update received', raw);
+          if (Array.isArray(raw)) {
+            raw.forEach((item) => this.positionUpdateSubject.next(this.normalizePosition(item)));
+          } else {
+            this.positionUpdateSubject.next(this.normalizePosition(raw));
           }
-        });
+        } catch (e) {
+          this.logger.error('Error parsing position update', e);
+        }
+      });
 
-        this.client?.subscribe('/topic/unrealized-pnl', (msg: IMessage) => {
-          try {
-            const raw = JSON.parse(msg.body);
-            this.logger.debug('Unrealized PnL received', raw);
-            if (Array.isArray(raw)) {
-              const normalized = raw.map((item) => this.normalizeUnrealised(item));
-              this.unrealisedSubject.next(normalized);
-            } else {
-              this.unrealisedSubject.next([this.normalizeUnrealised(raw)]);
-            }
-          } catch (e) {
-            this.logger.error('Error parsing unrealized pnl', e);
+      this.client?.subscribe('/topic/unrealized-pnl', (msg: IMessage) => {
+        try {
+          const raw = JSON.parse(msg.body);
+          this.logger.debug('Unrealized PnL received', raw);
+          if (Array.isArray(raw)) {
+            const normalized = raw.map((item) => this.normalizeUnrealised(item));
+            this.unrealisedSubject.next(normalized);
+          } else {
+            this.unrealisedSubject.next([this.normalizeUnrealised(raw)]);
           }
-        });
-      }, 100);
+        } catch (e) {
+          this.logger.error('Error parsing unrealized pnl', e);
+        }
+      });
     };
 
     this.client.onWebSocketClose = () => {
