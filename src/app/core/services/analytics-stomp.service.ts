@@ -158,7 +158,7 @@ export class AnalyticsStompService {
         }
       });
 
-      this.client.subscribe('/topic/unrealized-pnl', (msg: IMessage) => {
+      this.client!.subscribe('/topic/unrealized-pnl', (msg: IMessage) => {
         try {
           const raw = JSON.parse(msg.body);
           this.logger.debug('Unrealized PnL received', raw);
