@@ -143,12 +143,8 @@ export class AnalyticsStompService {
       this.logger.info('STOMP Connected');
       this.connectedSubject.next(true);
 
-      if (!this.client?.connected) {
-        this.logger.warn('Client not in connected state, skipping subscriptions');
-        return;
-      }
-
-      this.client.subscribe('/topic/position-update', (msg: IMessage) => {
+      // Subscribe to topics
+      this.client!.subscribe('/topic/position-update', (msg: IMessage) => {
         try {
           const raw = JSON.parse(msg.body);
           this.logger.debug('Position update received', raw);
