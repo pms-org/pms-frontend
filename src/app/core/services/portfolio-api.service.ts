@@ -19,10 +19,10 @@ export class PortfolioApiService {
   private readonly baseUrl = this.runtimeConfig.portfolio.baseHttp;
 
   getAllPortfolios(): Observable<InvestorDto[]> {
-    return this.http.get<InvestorDto[]>(`${this.baseUrl}/portfolio/api/portfolio/all`);
+    return this.http.get<InvestorDto[]>(`${this.baseUrl}/api/portfolio/all`);
   }
 
   getPortfolioById(portfolioId: string): Observable<InvestorDto> {
-    return this.http.get<InvestorDto>(`${this.baseUrl}/portfolio/api/portfolio/${portfolioId}`);
+    return this.http.get<InvestorDto>(`${this.baseUrl}/api/portfolio/${portfolioId}`);
   }
 }
