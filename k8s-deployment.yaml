@@ -1,39 +1,44 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pms-frontend
+  name: frontend
+  namespace: pms
   labels:
-    app: pms-frontend
+    app: frontend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: pms-frontend
+      app: frontend
   template:
     metadata:
       labels:
-        app: pms-frontend
+        app: frontend
     spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
         fsGroup: 101
       containers:
-      - name: pms-frontend
-        image: pms-frontend:v1.0.0
-        imagePullPolicy: IfNotPresent
+      - name: frontend
+        image: niishantdev/pms-frontend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
           name: http
+        volumeMounts:
+        - name: env-config
+          mountPath: /usr/share/nginx/html/env.js
+          subPath: env.js
         livenessProbe:
           httpGet:
-            path: /health
+            path: /
             port: 80
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /health
+            path: /
             port: 80
           initialDelaySeconds: 5
           periodSeconds: 5
@@ -47,60 +52,85 @@ spec:
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: false
+      volumes:
+      - name: env-config
+        configMap:
+          name: frontend-env-config
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: pms-frontend-service
+  name: frontend
+  namespace: pms
+  labels:
+    app: frontend
 spec:
   selector:
-    app: pms-frontend
+    app: frontend
   ports:
   - port: 80
     targetPort: 80
+    protocol: TCP
   type: ClusterIP
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: pms-frontend-ingress
+  name: pms-ingress
+  namespace: pms
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
 spec:
+  ingressClassName: alb
   rules:
-  - host: pms.example.com  # Update with your actual domain
-    http:
+  - http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: pms-frontend-service
+            name: frontend
             port:
               number: 80
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: apigateway
+            port:
+              number: 8088
+      - path: /ws
+        pathType: Prefix
+        backend:
+          service:
+            name: apigateway
+            port:
+              number: 8088
 ---
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: pms-frontend-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: pms-frontend
-  minReplicas: 2
-  maxReplicas: 5
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 80
+  name: frontend-env-config
+  namespace: pms
+data:
+  env.js: |
+    window.__ENV__ = {
+      API_GATEWAY_HTTP: "http://k8s-pms-pmsingre-ba04040d46-2083897170.us-east-1.elb.amazonaws.com",
+      API_GATEWAY_WS: "http://k8s-pms-pmsingre-ba04040d46-2083897170.us-east-1.elb.amazonaws.com",
+      AUTH_HTTP: "http://k8s-pms-pmsingre-ba04040d46-2083897170.us-east-1.elb.amazonaws.com",
+      PORTFOLIO_HTTP: "http://k8s-pms-pmsingre-ba04040d46-2083897170.us-east-1.elb.amazonaws.com",
+      PORTFOLIO_WS: "http://k8s-pms-pmsingre-ba04040d46-2083897170.us-east-1.elb.amazonaws.com",
+      ANALYTICS_HTTP: "http://k8s-pms-pmsingre-ba04040d46-2083897170.us-east-1.elb.amazonaws.com",
+      ANALYTICS_WS: "http://k8s-pms-pmsingre-ba04040d46-2083897170.us-east-1.elb.amazonaws.com",
+      LEADERBOARD_HTTP: "http://k8s-pms-pmsingre-ba04040d46-2083897170.us-east-1.elb.amazonaws.com",
+      LEADERBOARD_WS: "http://k8s-pms-pmsingre-ba04040d46-2083897170.us-east-1.elb.amazonaws.com",
+      RTTM_HTTP: "http://k8s-pms-pmsingre-ba04040d46-2083897170.us-east-1.elb.amazonaws.com",
+      RTTM_WS: "http://k8s-pms-pmsingre-ba04040d46-2083897170.us-east-1.elb.amazonaws.com"
+    };

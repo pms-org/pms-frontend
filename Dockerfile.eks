@@ -1,0 +1,42 @@
+# Stage 1: Build Angular application
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --legacy-peer-deps
+
+# Copy source code
+COPY . .
+
+# Build for EKS with k8s configuration
+RUN npm run build -- --configuration=k8s
+
+# Stage 2: Serve with nginx
+FROM nginx:1.25-alpine
+
+# Copy custom nginx configuration for EKS
+COPY nginx-eks.conf /etc/nginx/nginx.conf
+
+# Copy built application (Angular 21 outputs to browser subdirectory)
+COPY --from=build /app/dist/pms-frontend/browser /usr/share/nginx/html
+
+# Create runtime environment configuration script
+RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-generate-env.sh && \
+    echo 'cat > /usr/share/nginx/html/assets/env.js << EOF' >> /docker-entrypoint.d/40-generate-env.sh && \
+    echo 'window.__env = window.__env || {};' >> /docker-entrypoint.d/40-generate-env.sh && \
+    echo 'window.__env.apiGatewayHttp = "${API_GATEWAY_HTTP:-}";' >> /docker-entrypoint.d/40-generate-env.sh && \
+    echo 'window.__env.apiGatewayWs = "${API_GATEWAY_WS:-}";' >> /docker-entrypoint.d/40-generate-env.sh && \
+    echo 'EOF' >> /docker-entrypoint.d/40-generate-env.sh && \
+    chmod +x /docker-entrypoint.d/40-generate-env.sh
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost/health || exit 1
+
+EXPOSE 80
+
+# nginx will start automatically via base image entrypoint
