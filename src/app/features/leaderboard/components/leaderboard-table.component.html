@@ -123,7 +123,7 @@
 
           <!-- Name -->
           <td class="py-4 px-4">
-            <div class="text-white text-sm">{{ portfolio.name || 'N/A' }}</div>
+            <div class="text-white text-sm">{{ portfolio.name || ('Investor ' + portfolio.portfolioId.slice(0, 8).toUpperCase()) }}</div>
           </td>
 
           <!-- Composite Score -->
